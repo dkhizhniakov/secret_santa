@@ -1,0 +1,1 @@
+{"api_url":"https://santa.dkweb.net/api","aws_region":"eu-south-2","cloudfront_distribution_id":"E2NU8JHD1R89VM","db_host":"secret-santa-db.c1i42skw8yze.eu-south-2.rds.amazonaws.com","domain":"santa.dkweb.net","ec2_host":"15.216.120.118","s3_bucket":"secret-santa-frontend-9g306e3k"}

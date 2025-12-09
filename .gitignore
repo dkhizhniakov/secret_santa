@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+client/build/
+server/tmp/
+*.exe
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test coverage
+coverage/
+*.out
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+!*.tfvars.example
+
+# SSH keys (NEVER commit!)
+id_rsa
+id_rsa.pub
+*.pem
+
+# Secrets
+*secret*
+*password*
+!env.example

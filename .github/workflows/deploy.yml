@@ -1,0 +1,140 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ===========================================
+  # Deploy Frontend to S3 + CloudFront
+  # ===========================================
+  deploy-frontend:
+    name: 🌐 Deploy Frontend
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load deploy config
+        id: config
+        run: |
+          echo "ec2_host=$(jq -r '.ec2_host' deploy-config.json)" >> $GITHUB_OUTPUT
+          echo "s3_bucket=$(jq -r '.s3_bucket' deploy-config.json)" >> $GITHUB_OUTPUT
+          echo "cloudfront_id=$(jq -r '.cloudfront_distribution_id' deploy-config.json)" >> $GITHUB_OUTPUT
+          echo "db_host=$(jq -r '.db_host' deploy-config.json)" >> $GITHUB_OUTPUT
+          echo "domain=$(jq -r '.domain' deploy-config.json)" >> $GITHUB_OUTPUT
+          echo "api_url=$(jq -r '.api_url' deploy-config.json)" >> $GITHUB_OUTPUT
+          echo "aws_region=$(jq -r '.aws_region' deploy-config.json)" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd client
+          npm ci
+
+      - name: Build
+        run: |
+          cd client
+          echo "REACT_APP_API_URL=${{ steps.config.outputs.api_url }}" > .env.production
+          npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ steps.config.outputs.aws_region }}
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync client/build/ s3://${{ steps.config.outputs.s3_bucket }} --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.config.outputs.cloudfront_id }} \
+            --paths "/*"
+
+  # ===========================================
+  # Deploy Backend to EC2
+  # ===========================================
+  deploy-backend:
+    name: 🚀 Deploy Backend
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load deploy config
+        id: config
+        run: |
+          echo "ec2_host=$(jq -r '.ec2_host' deploy-config.json)" >> $GITHUB_OUTPUT
+          echo "db_host=$(jq -r '.db_host' deploy-config.json)" >> $GITHUB_OUTPUT
+          echo "domain=$(jq -r '.domain' deploy-config.json)" >> $GITHUB_OUTPUT
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ steps.config.outputs.ec2_host }} >> ~/.ssh/known_hosts
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          PORT=8080
+          ENV=production
+          DB_HOST=${{ steps.config.outputs.db_host }}
+          DB_PORT=5432
+          DB_USER=secretsanta
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=secret_santa
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          CORS_ORIGINS=https://${{ steps.config.outputs.domain }}
+          EOF
+
+      - name: Upload files to EC2
+        run: |
+          scp .env ubuntu@${{ steps.config.outputs.ec2_host }}:/opt/secret-santa/.env
+          scp -r server ubuntu@${{ steps.config.outputs.ec2_host }}:/opt/secret-santa/
+
+      - name: Build and run Docker on EC2
+        run: |
+          ssh ubuntu@${{ steps.config.outputs.ec2_host }} << 'ENDSSH'
+            cd /opt/secret-santa
+            
+            # Build Docker image
+            docker build -t secret-santa-api ./server
+            
+            # Stop old container
+            docker stop api 2>/dev/null || true
+            docker rm api 2>/dev/null || true
+            
+            # Run new container
+            docker run -d \
+              --name api \
+              --restart always \
+              -p 8080:8080 \
+              --env-file .env \
+              secret-santa-api
+            
+            # Health check
+            sleep 5
+            curl -f http://localhost:8080/health || exit 1
+            
+            echo "✅ Backend deployed successfully!"
+          ENDSSH
+
+      - name: Verify deployment
+        run: |
+          sleep 10
+          curl -f https://${{ steps.config.outputs.domain }}/api/health || echo "Waiting for DNS..."

@@ -1,0 +1,23 @@
+# ===========================================
+# Secret Santa - Terraform Variables
+# Скопируйте в terraform.tfvars и заполните
+# ===========================================
+
+# AWS регион (выберите ближайший к вам)
+aws_region = "eu-central-1"
+
+# Имя проекта (используется для именования ресурсов)
+project_name = "secret-santa"
+
+# Домен (должен быть в Route 53)
+domain_name = "dkweb.net"
+subdomain   = "santa"
+
+# База данных
+db_username = "secretsanta"
+db_password = "ИЗМЕНИТЕ_НА_БЕЗОПАСНЫЙ_ПАРОЛЬ_123!"
+
+# SSH ключ для доступа к EC2
+# Получите ваш публичный ключ: cat ~/.ssh/id_rsa.pub
+# Или создайте новый: ssh-keygen -t rsa -b 4096
+ssh_public_key = "ssh-rsa AAAA... your-email@example.com"
