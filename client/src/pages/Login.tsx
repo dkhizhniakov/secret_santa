@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Box,
@@ -41,25 +41,21 @@ const Login = () => {
   const error = searchParams.get("error");
   const telegramContainerRef = useRef<HTMLDivElement>(null);
 
-  // Telegram auth callback
-  const handleTelegramAuth = useCallback(
-    async (user: TelegramUser) => {
+  // Setup Telegram widget
+  useEffect(() => {
+    // Global callback function
+    window.onTelegramAuth = async (user: TelegramUser) => {
       try {
+        console.log("Telegram auth data:", user);
         const response = await axios.post(`${API_URL}/auth/telegram`, user);
+        console.log("Telegram auth response:", response.data);
         await setToken(response.data.token);
         navigate("/");
       } catch (err) {
         console.error("Telegram auth error:", err);
         navigate("/login?error=telegram_failed");
       }
-    },
-    [navigate, setToken]
-  );
-
-  // Setup Telegram widget
-  useEffect(() => {
-    // Global callback function
-    window.onTelegramAuth = handleTelegramAuth;
+    };
 
     // Add Telegram widget script
     if (
@@ -80,7 +76,7 @@ const Login = () => {
       // Cleanup
       delete (window as any).onTelegramAuth;
     };
-  }, [handleTelegramAuth]);
+  }, [navigate, setToken]);
 
   useEffect(() => {
     if (isAuthenticated) {
