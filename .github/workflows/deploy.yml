@@ -90,17 +90,15 @@ jobs:
 
       - name: Create .env file
         run: |
-          cat > .env << EOF
-          PORT=8080
-          ENV=production
-          DB_HOST=${{ steps.config.outputs.db_host }}
-          DB_PORT=5432
-          DB_USER=secretsanta
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_NAME=secret_santa
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          CORS_ORIGINS=https://${{ steps.config.outputs.domain }}
-          EOF
+          echo "PORT=8080" > .env
+          echo "ENV=production" >> .env
+          echo "DB_HOST=${{ steps.config.outputs.db_host }}" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_USER=secretsanta" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_NAME=secret_santa" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "CORS_ORIGINS=https://${{ steps.config.outputs.domain }}" >> .env
 
       - name: Upload files to EC2
         run: |
