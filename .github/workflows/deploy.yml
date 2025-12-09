@@ -89,16 +89,24 @@ jobs:
           ssh-keyscan -H ${{ steps.config.outputs.ec2_host }} >> ~/.ssh/known_hosts
 
       - name: Create .env file
+        env:
+          DB_HOST: ${{ steps.config.outputs.db_host }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_USER: ${{ secrets.DB_USER }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DOMAIN: ${{ steps.config.outputs.domain }}
         run: |
-          echo "PORT=8080" > .env
-          echo "ENV=production" >> .env
-          echo "DB_HOST=${{ steps.config.outputs.db_host }}" >> .env
-          echo "DB_PORT=5432" >> .env
-          echo "DB_USER=secretsanta" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_NAME=secret_santa" >> .env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-          echo "CORS_ORIGINS=https://${{ steps.config.outputs.domain }}" >> .env
+          printf '%s\n' \
+            "PORT=8080" \
+            "ENV=production" \
+            "DB_HOST=${DB_HOST}" \
+            "DB_PORT=5432" \
+            "DB_USER=${DB_USER}" \
+            "DB_PASSWORD=${DB_PASSWORD}" \
+            "DB_NAME=secret_santa" \
+            "JWT_SECRET=${JWT_SECRET}" \
+            "CORS_ORIGINS=https://${DOMAIN}" \
+            > .env
 
       - name: Upload files to EC2
         run: |
