@@ -107,11 +107,6 @@ jobs:
             "JWT_SECRET=${JWT_SECRET}" \
             "CORS_ORIGINS=https://${DOMAIN}" \
             > .env
-          echo "=== .env structure (values hidden) ==="
-          sed 's/=.*/=***/' .env
-          echo "=== Checking for whitespace issues ==="
-          grep -n ' ' .env && echo "WARNING: Found spaces!" || echo "No spaces in values"
-          grep -n '	' .env && echo "WARNING: Found tabs!" || echo "No tabs"
 
       - name: Upload files to EC2
         run: |
