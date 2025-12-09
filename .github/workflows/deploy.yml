@@ -43,7 +43,7 @@ jobs:
       - name: Build
         run: |
           cd client
-          echo "REACT_APP_API_URL=${{ steps.config.outputs.api_url }}" > .env.production
+          echo "VITE_API_URL=${{ steps.config.outputs.api_url }}" > .env.production
           npm run build
 
       - name: Configure AWS credentials
@@ -95,6 +95,13 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           DOMAIN: ${{ steps.config.outputs.domain }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ steps.config.outputs.aws_region }}
+          S3_BUCKET: ${{ steps.config.outputs.s3_bucket }}
         run: |
           printf '%s\n' \
             "PORT=8080" \
@@ -106,6 +113,15 @@ jobs:
             "DB_NAME=secret_santa" \
             "JWT_SECRET=${JWT_SECRET}" \
             "CORS_ORIGINS=https://${DOMAIN}" \
+            "BASE_URL=https://${DOMAIN}" \
+            "SERVER_URL=https://${DOMAIN}" \
+            "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" \
+            "GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" \
+            "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}" \
+            "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" \
+            "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" \
+            "AWS_REGION=${AWS_REGION}" \
+            "S3_BUCKET=${S3_BUCKET}" \
             > .env
 
       - name: Upload files to EC2

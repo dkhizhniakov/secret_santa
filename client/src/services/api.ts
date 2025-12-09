@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { AuthResponse, Group, User, Assignment } from '../types';
+import { Raffle, User, Assignment } from '../types';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -32,55 +32,62 @@ api.interceptors.response.use(
 );
 
 // Auth
-export const register = async (email: string, password: string, name: string): Promise<AuthResponse> => {
-  const { data } = await api.post<AuthResponse>('/auth/register', { email, password, name });
-  return data;
-};
-
-export const login = async (email: string, password: string): Promise<AuthResponse> => {
-  const { data } = await api.post<AuthResponse>('/auth/login', { email, password });
-  return data;
-};
-
 export const getMe = async (): Promise<User> => {
   const { data } = await api.get<User>('/auth/me');
   return data;
 };
 
-// Groups
-export const getGroups = async (): Promise<Group[]> => {
-  const { data } = await api.get<Group[]>('/groups');
+export const logout = async (): Promise<void> => {
+  await api.post('/auth/logout');
+  localStorage.removeItem('token');
+};
+
+// Raffles
+export const getRaffles = async (): Promise<Raffle[]> => {
+  const { data } = await api.get<Raffle[]>('/raffles');
   return data;
 };
 
-export const getGroup = async (id: string): Promise<Group> => {
-  const { data } = await api.get<Group>(`/groups/${id}`);
+export const getRaffle = async (id: string): Promise<Raffle> => {
+  const { data } = await api.get<Raffle>(`/raffles/${id}`);
   return data;
 };
 
-export const createGroup = async (group: { name: string; description?: string; budget?: string; eventDate?: string }): Promise<Group> => {
-  const { data } = await api.post<Group>('/groups', group);
+export const createRaffle = async (raffle: { name: string; description?: string; avatarUrl?: string; budget?: string; eventDate?: string }): Promise<Raffle> => {
+  const { data } = await api.post<Raffle>('/raffles', raffle);
   return data;
 };
 
-export const deleteGroup = async (id: string): Promise<void> => {
-  await api.delete(`/groups/${id}`);
-};
-
-export const joinGroup = async (codeOrId: string): Promise<Group> => {
-  const { data } = await api.post<Group>(`/groups/${codeOrId}/join`);
+// Upload avatar
+export const uploadAvatar = async (file: File): Promise<{ url: string }> => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+  
+  const { data } = await api.post<{ url: string }>('/upload/avatar', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return data;
 };
 
-export const drawNames = async (id: string): Promise<Group> => {
-  const { data } = await api.post<Group>(`/groups/${id}/draw`);
+export const deleteRaffle = async (id: string): Promise<void> => {
+  await api.delete(`/raffles/${id}`);
+};
+
+export const joinRaffle = async (codeOrId: string): Promise<Raffle> => {
+  const { data } = await api.post<Raffle>(`/raffles/${codeOrId}/join`);
   return data;
 };
 
-export const getMyAssignment = async (groupId: string): Promise<Assignment> => {
-  const { data } = await api.get<Assignment>(`/groups/${groupId}/my-assignment`);
+export const drawNames = async (id: string): Promise<Raffle> => {
+  const { data } = await api.post<Raffle>(`/raffles/${id}/draw`);
+  return data;
+};
+
+export const getMyAssignment = async (raffleId: string): Promise<Assignment> => {
+  const { data } = await api.get<Assignment>(`/raffles/${raffleId}/my-assignment`);
   return data;
 };
 
 export default api;
-

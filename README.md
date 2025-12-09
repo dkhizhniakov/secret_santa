@@ -4,19 +4,23 @@
 
 ## ✨ Возможности
 
-- Создание групп для игры
-- Приглашение участников по ссылке
-- Автоматическая жеребьёвка (кто кому дарит подарок)
-- Установка бюджета и даты обмена
+- 🎁 Создание розыгрышей с названием, описанием и аватаром
+- 🔗 Приглашение участников по ссылке
+- 🎲 Автоматическая жеребьёвка (кто кому дарит подарок)
+- 💰 Установка бюджета подарка (мин/макс + валюта)
+- 📅 Установка даты обмена
+- 🔐 Авторизация через Google или Telegram
+- 📸 Загрузка аватаров розыгрышей (AWS S3)
 
 ## 🛠 Технологии
 
 | Компонент | Технологии |
 |-----------|------------|
-| **Frontend** | React 18, TypeScript, Material-UI |
-| **Backend** | Go 1.21, Gin, GORM |
+| **Frontend** | React 18, TypeScript, Vite, Material-UI, TanStack Query |
+| **Backend** | Go 1.21, Gin, GORM, AWS SDK |
 | **Database** | PostgreSQL 15 |
-| **Deploy** | AWS (Lightsail + RDS + S3 + CloudFront) |
+| **Storage** | AWS S3 (аватары) |
+| **Deploy** | AWS (EC2 + RDS + S3 + CloudFront + Route 53) |
 
 ## 📁 Структура проекта
 
@@ -87,17 +91,28 @@ docker-compose down
 
 ## 📡 API
 
+### Авторизация
 | Метод | Endpoint | Описание |
 |-------|----------|----------|
-| POST | `/api/auth/register` | Регистрация |
-| POST | `/api/auth/login` | Вход |
+| GET | `/api/auth/google` | Google OAuth login |
+| GET | `/api/auth/google/callback` | Google OAuth callback |
+| POST | `/api/auth/telegram` | Telegram login |
 | GET | `/api/auth/me` | Текущий пользователь |
-| GET | `/api/groups` | Мои группы |
-| POST | `/api/groups` | Создать группу |
-| GET | `/api/groups/:id` | Получить группу |
+
+### Розыгрыши
+| Метод | Endpoint | Описание |
+|-------|----------|----------|
+| GET | `/api/groups` | Мои розыгрыши |
+| POST | `/api/groups` | Создать розыгрыш |
+| GET | `/api/groups/:id` | Получить розыгрыш |
 | POST | `/api/groups/:id/join` | Присоединиться |
 | POST | `/api/groups/:id/draw` | Провести жеребьёвку |
 | GET | `/api/groups/:id/my-assignment` | Кому я дарю подарок |
+
+### Загрузка файлов
+| Метод | Endpoint | Описание |
+|-------|----------|----------|
+| POST | `/api/upload/avatar` | Загрузить аватар (макс 5MB) |
 
 ## ☁️ Деплой на AWS
 
@@ -114,19 +129,40 @@ terraform init && terraform apply
 
 ## 🔧 Переменные окружения
 
-Сервер использует следующие переменные (см. `server/.env`):
+Сервер использует следующие переменные (см. [`env.example`](./env.example)):
 
 ```env
-PORT=8080
-ENV=development
+# Database
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=secret_santa
+
+# JWT
 JWT_SECRET=your-secret-key
+
+# CORS & URLs
 CORS_ORIGINS=http://localhost:3000
+BASE_URL=http://localhost:3000  # Frontend URL
+SERVER_URL=http://localhost:8080  # Backend URL
+
+# OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+
+# AWS S3 (для аватаров)
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+AWS_REGION=eu-south-2
+S3_BUCKET=secret-santa-frontend-xxxxx
 ```
+
+**Подробности:**
+- OAuth: [`docs/OAUTH_SETUP.md`](./docs/OAUTH_SETUP.md)
+- Аватары: [`docs/AVATAR_SETUP.md`](./docs/AVATAR_SETUP.md)
+- Локальное тестирование: [`docs/LOCAL_TESTING_AVATARS.md`](./docs/LOCAL_TESTING_AVATARS.md)
 
 ## 📝 License
 

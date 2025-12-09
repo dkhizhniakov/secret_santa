@@ -356,6 +356,19 @@ resource "aws_s3_bucket" "frontend" {
   }
 }
 
+# CORS для загрузки аватаров с фронтенда
+resource "aws_s3_bucket_cors_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST"]
+    allowed_origins = ["https://${local.full_domain}", "http://localhost:3000"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+
 resource "random_string" "bucket_suffix" {
   length  = 8
   special = false
@@ -366,9 +379,9 @@ resource "aws_s3_bucket_public_access_block" "frontend" {
   bucket = aws_s3_bucket.frontend.id
 
   block_public_acls       = true
-  block_public_policy     = true
+  block_public_policy     = false  # Разрешаем публичную политику для /avatars/*
   ignore_public_acls      = true
-  restrict_public_buckets = true
+  restrict_public_buckets = false  # Разрешаем публичный доступ через политику
 }
 
 # CloudFront Origin Access Control
@@ -398,6 +411,13 @@ resource "aws_s3_bucket_policy" "frontend" {
             "AWS:SourceArn" = aws_cloudfront_distribution.main.arn
           }
         }
+      },
+      {
+        Sid       = "AllowPublicReadAvatars"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.frontend.arn}/avatars/*"
       }
     ]
   })

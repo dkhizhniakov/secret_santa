@@ -14,17 +14,19 @@ import (
 	"github.com/google/uuid"
 )
 
-type CreateGroupRequest struct {
+type CreateRaffleRequest struct {
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
+	AvatarURL   string `json:"avatarUrl"` // URL уже загруженного аватара
 	Budget      string `json:"budget"`
 	EventDate   string `json:"eventDate"`
 }
 
-type GroupResponse struct {
+type RaffleResponse struct {
 	ID          string           `json:"id"`
 	Name        string           `json:"name"`
 	Description string           `json:"description"`
+	AvatarURL   *string          `json:"avatarUrl"`
 	InviteCode  string           `json:"inviteCode"`
 	Budget      string           `json:"budget"`
 	EventDate   *string          `json:"eventDate"`
@@ -36,10 +38,10 @@ type GroupResponse struct {
 }
 
 type MemberResponse struct {
-	ID     string `json:"id"`
-	UserID string `json:"userId"`
-	Name   string `json:"name"`
-	Email  string `json:"email"`
+	ID        string  `json:"id"`
+	UserID    string  `json:"userId"`
+	Name      string  `json:"name"`
+	AvatarURL *string `json:"avatarUrl"`
 }
 
 type AssignmentResponse struct {
@@ -47,7 +49,7 @@ type AssignmentResponse struct {
 	ReceiverName string `json:"receiverName"`
 }
 
-func (h *Handler) GetGroups(c *gin.Context) {
+func (h *Handler) GetRaffles(c *gin.Context) {
 	userID := c.GetString("userID")
 	uid, _ := uuid.Parse(userID)
 
@@ -64,19 +66,19 @@ func (h *Handler) GetGroups(c *gin.Context) {
 		h.db.Preload("Members").Preload("Members.User").Where("id IN ?", groupIDs).Find(&groups)
 	}
 
-	response := make([]GroupResponse, len(groups))
+	response := make([]RaffleResponse, len(groups))
 	for i, g := range groups {
-		response[i] = h.groupToResponse(g, uid)
+		response[i] = h.raffleToResponse(g, uid)
 	}
 
 	c.JSON(http.StatusOK, response)
 }
 
-func (h *Handler) CreateGroup(c *gin.Context) {
+func (h *Handler) CreateRaffle(c *gin.Context) {
 	userID := c.GetString("userID")
 	uid, _ := uuid.Parse(userID)
 
-	var req CreateGroupRequest
+	var req CreateRaffleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -94,9 +96,15 @@ func (h *Handler) CreateGroup(c *gin.Context) {
 		}
 	}
 
+	var avatarURL *string
+	if req.AvatarURL != "" {
+		avatarURL = &req.AvatarURL
+	}
+
 	group := models.Group{
 		Name:        req.Name,
 		Description: req.Description,
+		AvatarURL:   avatarURL,
 		InviteCode:  inviteCode,
 		Budget:      req.Budget,
 		EventDate:   eventDate,
@@ -118,10 +126,10 @@ func (h *Handler) CreateGroup(c *gin.Context) {
 	// Reload with members
 	h.db.Preload("Members").Preload("Members.User").First(&group, group.ID)
 
-	c.JSON(http.StatusCreated, h.groupToResponse(group, uid))
+	c.JSON(http.StatusCreated, h.raffleToResponse(group, uid))
 }
 
-func (h *Handler) GetGroup(c *gin.Context) {
+func (h *Handler) GetRaffle(c *gin.Context) {
 	userID := c.GetString("userID")
 	uid, _ := uuid.Parse(userID)
 
@@ -152,10 +160,10 @@ func (h *Handler) GetGroup(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, h.groupToResponse(group, uid))
+	c.JSON(http.StatusOK, h.raffleToResponse(group, uid))
 }
 
-func (h *Handler) DeleteGroup(c *gin.Context) {
+func (h *Handler) DeleteRaffle(c *gin.Context) {
 	userID := c.GetString("userID")
 	uid, _ := uuid.Parse(userID)
 
@@ -185,7 +193,7 @@ func (h *Handler) DeleteGroup(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Group deleted"})
 }
 
-func (h *Handler) JoinGroup(c *gin.Context) {
+func (h *Handler) JoinRaffle(c *gin.Context) {
 	userID := c.GetString("userID")
 	uid, _ := uuid.Parse(userID)
 
@@ -196,7 +204,7 @@ func (h *Handler) JoinGroup(c *gin.Context) {
 	if gid, err := uuid.Parse(groupID); err == nil {
 		h.db.First(&group, gid)
 	}
-	
+
 	if group.ID == uuid.Nil {
 		if err := h.db.Where("invite_code = ?", groupID).First(&group).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Group not found"})
@@ -229,7 +237,7 @@ func (h *Handler) JoinGroup(c *gin.Context) {
 	// Reload group with members
 	h.db.Preload("Members").Preload("Members.User").First(&group, group.ID)
 
-	c.JSON(http.StatusOK, h.groupToResponse(group, uid))
+	c.JSON(http.StatusOK, h.raffleToResponse(group, uid))
 }
 
 func (h *Handler) DrawNames(c *gin.Context) {
@@ -289,7 +297,7 @@ func (h *Handler) DrawNames(c *gin.Context) {
 	// Reload with members
 	h.db.Preload("Members").Preload("Members.User").First(&group, gid)
 
-	c.JSON(http.StatusOK, h.groupToResponse(group, uid))
+	c.JSON(http.StatusOK, h.raffleToResponse(group, uid))
 }
 
 func (h *Handler) GetMyAssignment(c *gin.Context) {
@@ -315,14 +323,14 @@ func (h *Handler) GetMyAssignment(c *gin.Context) {
 	})
 }
 
-func (h *Handler) groupToResponse(g models.Group, currentUserID uuid.UUID) GroupResponse {
+func (h *Handler) raffleToResponse(g models.Group, currentUserID uuid.UUID) RaffleResponse {
 	members := make([]MemberResponse, len(g.Members))
 	for i, m := range g.Members {
 		members[i] = MemberResponse{
-			ID:     m.ID.String(),
-			UserID: m.UserID.String(),
-			Name:   m.User.Name,
-			Email:  m.User.Email,
+			ID:        m.ID.String(),
+			UserID:    m.UserID.String(),
+			Name:      m.User.Name,
+			AvatarURL: m.User.AvatarURL,
 		}
 	}
 
@@ -332,10 +340,11 @@ func (h *Handler) groupToResponse(g models.Group, currentUserID uuid.UUID) Group
 		eventDate = &formatted
 	}
 
-	return GroupResponse{
+	return RaffleResponse{
 		ID:          g.ID.String(),
 		Name:        g.Name,
 		Description: g.Description,
+		AvatarURL:   g.AvatarURL,
 		InviteCode:  g.InviteCode,
 		Budget:      g.Budget,
 		EventDate:   eventDate,
@@ -394,4 +403,3 @@ func cryptoRandInt64() int64 {
 	n, _ := rand.Int(rand.Reader, big.NewInt(1<<62))
 	return n.Int64()
 }
-

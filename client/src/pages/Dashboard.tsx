@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   Typography,
   Card,
   CardContent,
   CardActionArea,
-  Grid,
   Chip,
   TextField,
   Button,
@@ -16,6 +16,7 @@ import {
   DialogActions,
   Alert,
   Skeleton,
+  Avatar,
 } from '@mui/material';
 import {
   Group as GroupIcon,
@@ -24,49 +25,32 @@ import {
   Add,
   Link as LinkIcon,
 } from '@mui/icons-material';
-import { Group } from '../types';
 import * as api from '../services/api';
 
-const Dashboard: React.FC = () => {
+const Dashboard = () => {
   const navigate = useNavigate();
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
-  const [joinError, setJoinError] = useState('');
-  const [joining, setJoining] = useState(false);
 
-  useEffect(() => {
-    loadGroups();
-  }, []);
+  const { data: raffles = [], isLoading } = useQuery({
+    queryKey: ['raffles'],
+    queryFn: api.getRaffles,
+  });
 
-  const loadGroups = async () => {
-    try {
-      const data = await api.getGroups();
-      setGroups(data);
-    } catch (error) {
-      console.error('Failed to load groups:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleJoinGroup = async () => {
-    if (!inviteCode.trim()) return;
-    
-    setJoinError('');
-    setJoining(true);
-
-    try {
-      const group = await api.joinGroup(inviteCode.trim());
+  const joinRaffleMutation = useMutation({
+    mutationFn: (code: string) => api.joinRaffle(code),
+    onSuccess: (raffle) => {
+      queryClient.invalidateQueries({ queryKey: ['raffles'] });
       setJoinDialogOpen(false);
       setInviteCode('');
-      navigate(`/group/${group.id}`);
-    } catch (err: any) {
-      setJoinError(err.response?.data?.error || 'Ошибка присоединения');
-    } finally {
-      setJoining(false);
-    }
+      navigate(`/raffle/${raffle.id}`);
+    },
+  });
+
+  const handleJoinRaffle = () => {
+    if (!inviteCode.trim()) return;
+    joinRaffleMutation.mutate(inviteCode.trim());
   };
 
   const formatDate = (date: string | null) => {
@@ -82,7 +66,7 @@ const Dashboard: React.FC = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Box>
           <Typography variant="h4" fontWeight={700} gutterBottom>
-            🎄 Мои группы
+            🎄 Мои розыгрыши
           </Typography>
           <Typography color="text.secondary">
             Управляйте своими играми в Тайного Санту
@@ -97,23 +81,23 @@ const Dashboard: React.FC = () => {
         </Button>
       </Box>
 
-      {loading ? (
-        <Grid container spacing={3}>
+      {isLoading ? (
+        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
           {[1, 2, 3].map((i) => (
-            <Grid item xs={12} sm={6} md={4} key={i}>
+            <Box key={i} sx={{ flex: '1 1 300px', minWidth: '300px' }}>
               <Skeleton variant="rounded" height={200} />
-            </Grid>
+            </Box>
           ))}
-        </Grid>
-      ) : groups.length === 0 ? (
+        </Box>
+      ) : raffles.length === 0 ? (
         <Card sx={{ textAlign: 'center', py: 8 }}>
           <CardContent>
             <Typography variant="h1" sx={{ fontSize: 64, mb: 2 }}>🎁</Typography>
             <Typography variant="h5" gutterBottom>
-              У вас пока нет групп
+              У вас пока нет розыгрышей
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>
-              Создайте новую группу или присоединитесь по коду приглашения
+              Создайте новый розыгрыш или присоединитесь по коду приглашения
             </Typography>
             <Button
               variant="contained"
@@ -121,7 +105,7 @@ const Dashboard: React.FC = () => {
               onClick={() => navigate('/create')}
               sx={{ mr: 2 }}
             >
-              Создать группу
+              Создать розыгрыш
             </Button>
             <Button
               variant="outlined"
@@ -133,33 +117,38 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
       ) : (
-        <Grid container spacing={3}>
-          {groups.map((group) => (
-            <Grid item xs={12} sm={6} md={4} key={group.id}>
+        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+          {raffles.map((raffle) => (
+            <Box key={raffle.id} sx={{ flex: '1 1 300px', minWidth: '300px' }}>
               <Card>
-                <CardActionArea onClick={() => navigate(`/group/${group.id}`)}>
+                <CardActionArea onClick={() => navigate(`/raffle/${raffle.id}`)}>
                   <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Typography variant="h6" fontWeight={700}>
-                        {group.name}
-                      </Typography>
-                      {group.isDrawn ? (
-                        <Chip
-                          icon={<CheckCircle />}
-                          label="Жеребьевка проведена"
-                          color="success"
-                          size="small"
-                        />
-                      ) : (
-                        <Chip
-                          label="Ожидает жеребьевки"
-                          color="warning"
-                          size="small"
-                        />
-                      )}
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+                      <Avatar src={raffle.avatarUrl || undefined} sx={{ width: 48, height: 48 }}>
+                        🎅
+                      </Avatar>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="h6" fontWeight={700}>
+                          {raffle.name}
+                        </Typography>
+                        {raffle.isDrawn ? (
+                          <Chip
+                            icon={<CheckCircle />}
+                            label="Жеребьевка проведена"
+                            color="success"
+                            size="small"
+                          />
+                        ) : (
+                          <Chip
+                            label="Ожидает жеребьевки"
+                            color="warning"
+                            size="small"
+                          />
+                        )}
+                      </Box>
                     </Box>
 
-                    {group.description && (
+                    {raffle.description && (
                       <Typography
                         color="text.secondary"
                         sx={{
@@ -171,7 +160,7 @@ const Dashboard: React.FC = () => {
                           WebkitBoxOrient: 'vertical',
                         }}
                       >
-                        {group.description}
+                        {raffle.description}
                       </Typography>
                     )}
 
@@ -179,20 +168,20 @@ const Dashboard: React.FC = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <GroupIcon fontSize="small" />
                         <Typography variant="body2">
-                          {group.members.length} участников
+                          {raffle.members.length} участников
                         </Typography>
                       </Box>
-                      {group.eventDate && (
+                      {raffle.eventDate && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <CalendarMonth fontSize="small" />
                           <Typography variant="body2">
-                            {formatDate(group.eventDate)}
+                            {formatDate(raffle.eventDate)}
                           </Typography>
                         </Box>
                       )}
                     </Box>
 
-                    {group.budget && (
+                    {raffle.budget && (
                       <Typography
                         variant="body2"
                         sx={{
@@ -204,24 +193,24 @@ const Dashboard: React.FC = () => {
                           display: 'inline-block',
                         }}
                       >
-                        💰 Бюджет: {group.budget}
+                        💰 Бюджет: {raffle.budget}
                       </Typography>
                     )}
                   </CardContent>
                 </CardActionArea>
               </Card>
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       )}
 
       {/* Join Dialog */}
       <Dialog open={joinDialogOpen} onClose={() => setJoinDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Присоединиться к группе</DialogTitle>
+        <DialogTitle>Присоединиться к розыгрышу</DialogTitle>
         <DialogContent>
-          {joinError && (
+          {joinRaffleMutation.isError && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {joinError}
+              {(joinRaffleMutation.error as any).response?.data?.error || 'Ошибка присоединения'}
             </Alert>
           )}
           <TextField
@@ -232,16 +221,21 @@ const Dashboard: React.FC = () => {
             onChange={(e) => setInviteCode(e.target.value)}
             placeholder="Например: abc12345"
             sx={{ mt: 1 }}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleJoinRaffle();
+              }
+            }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setJoinDialogOpen(false)}>Отмена</Button>
           <Button
             variant="contained"
-            onClick={handleJoinGroup}
-            disabled={!inviteCode.trim() || joining}
+            onClick={handleJoinRaffle}
+            disabled={!inviteCode.trim() || joinRaffleMutation.isPending}
           >
-            {joining ? 'Присоединение...' : 'Присоединиться'}
+            {joinRaffleMutation.isPending ? 'Присоединение...' : 'Присоединиться'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -250,4 +244,3 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
-

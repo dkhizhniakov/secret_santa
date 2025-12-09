@@ -52,11 +52,14 @@ const Layout: React.FC = () => {
             onClick={() => navigate('/create')}
             sx={{ mr: 2 }}
           >
-            Создать группу
+            Создать розыгрыш
           </Button>
 
           <IconButton onClick={handleMenu}>
-            <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
+            <Avatar 
+              src={user?.avatar_url || undefined}
+              sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}
+            >
               {user?.name?.[0]?.toUpperCase()}
             </Avatar>
           </IconButton>
@@ -67,7 +70,7 @@ const Layout: React.FC = () => {
           >
             <MenuItem disabled>
               <Typography variant="body2" color="text.secondary">
-                {user?.email}
+                {user?.name}
               </Typography>
             </MenuItem>
             <MenuItem onClick={handleLogout}>

@@ -6,8 +6,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  setToken: (token: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -34,16 +33,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadUser();
   }, [loadUser]);
 
-  const login = async (email: string, password: string) => {
-    const response = await api.login(email, password);
-    localStorage.setItem('token', response.token);
-    setUser(response.user);
-  };
-
-  const register = async (email: string, password: string, name: string) => {
-    const response = await api.register(email, password, name);
-    localStorage.setItem('token', response.token);
-    setUser(response.user);
+  const setToken = async (token: string) => {
+    localStorage.setItem('token', token);
+    try {
+      const userData = await api.getMe();
+      setUser(userData);
+    } catch {
+      localStorage.removeItem('token');
+      throw new Error('Failed to load user');
+    }
   };
 
   const logout = () => {
@@ -56,8 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user,
       isAuthenticated: !!user,
       loading,
-      login,
-      register,
+      setToken,
       logout,
     }}>
       {children}
@@ -72,4 +69,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

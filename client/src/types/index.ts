@@ -1,7 +1,7 @@
 export interface User {
   id: string;
-  email: string;
   name: string;
+  avatar_url?: string | null;
 }
 
 export interface AuthResponse {
@@ -13,13 +13,14 @@ export interface Member {
   id: string;
   userId: string;
   name: string;
-  email: string;
+  avatarUrl?: string | null;
 }
 
-export interface Group {
+export interface Raffle {
   id: string;
   name: string;
   description: string;
+  avatarUrl?: string | null;
   inviteCode: string;
   budget: string;
   eventDate: string | null;
@@ -34,4 +35,3 @@ export interface Assignment {
   receiverId: string;
   receiverName: string;
 }
-

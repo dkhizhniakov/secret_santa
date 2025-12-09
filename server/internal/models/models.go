@@ -6,20 +6,24 @@ import (
 	"github.com/google/uuid"
 )
 
+// User - пользователь системы (авторизация только через Google/Telegram)
 type User struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Email     string    `gorm:"uniqueIndex;not null"`
-	Password  string    `gorm:"not null"`
-	Name      string    `gorm:"not null"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID         uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"id"`
+	GoogleID   *string   `gorm:"uniqueIndex" json:"-"`
+	TelegramID *int64    `gorm:"uniqueIndex" json:"-"`
+	Name       string    `gorm:"not null" json:"name"`
+	AvatarURL  *string   `json:"avatar_url"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
+// Group (будет заменено на Raffle позже)
 type Group struct {
 	ID          uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name        string    `gorm:"not null"`
 	Description string
-	InviteCode  string    `gorm:"uniqueIndex;not null"`
+	AvatarURL   *string   // URL аватара розыгрыша
+	InviteCode  string `gorm:"uniqueIndex;not null"`
 	Budget      string
 	EventDate   *time.Time
 	OwnerID     uuid.UUID `gorm:"type:uuid;not null"`
@@ -42,10 +46,9 @@ type Member struct {
 type Assignment struct {
 	ID         uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	GroupID    uuid.UUID `gorm:"type:uuid;not null"`
-	GiverID    uuid.UUID `gorm:"type:uuid;not null"` // Кто дарит
-	ReceiverID uuid.UUID `gorm:"type:uuid;not null"` // Кому дарит
+	GiverID    uuid.UUID `gorm:"type:uuid;not null"`
+	ReceiverID uuid.UUID `gorm:"type:uuid;not null"`
 	Giver      User      `gorm:"foreignKey:GiverID"`
 	Receiver   User      `gorm:"foreignKey:ReceiverID"`
 	CreatedAt  time.Time
 }
-

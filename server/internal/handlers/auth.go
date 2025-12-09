@@ -1,7 +1,17 @@
 package handlers
 
 import (
+	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"secret-santa/internal/models"
@@ -9,102 +19,197 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
-type RegisterRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
-	Name     string `json:"name" binding:"required"`
-}
+// ==================== Types ====================
 
-type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+type UserResponse struct {
+	ID        string  `json:"id"`
+	Name      string  `json:"name"`
+	AvatarURL *string `json:"avatar_url"`
 }
 
 type AuthResponse struct {
-	Token string      `json:"token"`
+	Token string       `json:"token"`
 	User  UserResponse `json:"user"`
 }
 
-type UserResponse struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	Name  string `json:"name"`
+type GoogleUserInfo struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Picture string `json:"picture"`
 }
 
-func (h *Handler) Register(c *gin.Context) {
-	var req RegisterRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+type TelegramAuthData struct {
+	ID        int64  `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name,omitempty"`
+	Username  string `json:"username,omitempty"`
+	PhotoURL  string `json:"photo_url,omitempty"`
+	AuthDate  int64  `json:"auth_date"`
+	Hash      string `json:"hash"`
+}
+
+// ==================== Google OAuth ====================
+
+func (h *Handler) getGoogleOAuthConfig() *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     h.cfg.GoogleClientID,
+		ClientSecret: h.cfg.GoogleClientSecret,
+		RedirectURL:  h.cfg.ServerURL + "/api/auth/google/callback",
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.profile",
+		},
+		Endpoint: google.Endpoint,
+	}
+}
+
+// GoogleLogin - редирект на страницу авторизации Google
+func (h *Handler) GoogleLogin(c *gin.Context) {
+	config := h.getGoogleOAuthConfig()
+
+	// Генерируем state для защиты от CSRF
+	state := uuid.New().String()
+
+	// Сохраняем state в httpOnly cookie на 5 минут
+	secure := h.cfg.Env == "production"
+	c.SetCookie(
+		"oauth_state",
+		state,
+		300, // 5 минут
+		"/",
+		"",
+		secure, // secure = true в production (HTTPS)
+		true,   // httpOnly = true
+	)
+
+	url := config.AuthCodeURL(state, oauth2.AccessTypeOffline)
+	c.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+// GoogleCallback - обработка callback от Google
+func (h *Handler) GoogleCallback(c *gin.Context) {
+	config := h.getGoogleOAuthConfig()
+
+	// Проверяем state для защиты от CSRF
+	receivedState := c.Query("state")
+	savedState, err := c.Cookie("oauth_state")
+	if err != nil || receivedState != savedState {
+		c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/login?error=invalid_state")
 		return
 	}
 
-	// Check if user exists
-	var existingUser models.User
-	if err := h.db.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "User with this email already exists"})
+	// Удаляем использованный state
+	secure := h.cfg.Env == "production"
+	c.SetCookie("oauth_state", "", -1, "/", "", secure, true)
+
+	code := c.Query("code")
+	if code == "" {
+		c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/login?error=no_code")
 		return
 	}
 
-	// Hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	// Обмениваем code на token
+	token, err := config.Exchange(context.Background(), code)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/login?error=exchange_failed")
 		return
 	}
 
-	// Create user
-	user := models.User{
-		Email:    req.Email,
-		Password: string(hashedPassword),
-		Name:     req.Name,
+	// Получаем информацию о пользователе
+	client := config.Client(context.Background(), token)
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/login?error=userinfo_failed")
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	var googleUser GoogleUserInfo
+	if err := json.Unmarshal(body, &googleUser); err != nil {
+		c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/login?error=parse_failed")
+		return
 	}
 
+	// Ищем или создаём пользователя
+	user, err := h.findOrCreateGoogleUser(googleUser)
+	if err != nil {
+		c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/login?error=db_error")
+		return
+	}
+
+	// Генерируем JWT
+	jwtToken, err := h.generateToken(user)
+	if err != nil {
+		c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/login?error=token_error")
+		return
+	}
+
+	// Редирект на frontend с токеном
+	c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/auth/callback?token="+jwtToken)
+}
+
+func (h *Handler) findOrCreateGoogleUser(googleUser GoogleUserInfo) (*models.User, error) {
+	var user models.User
+
+	// Ищем по GoogleID
+	err := h.db.Where("google_id = ?", googleUser.ID).First(&user).Error
+	if err == nil {
+		// Обновляем данные
+		user.Name = googleUser.Name
+		if googleUser.Picture != "" {
+			user.AvatarURL = &googleUser.Picture
+		}
+		h.db.Save(&user)
+		return &user, nil
+	}
+
+	// Создаём нового пользователя
+	user = models.User{
+		GoogleID:  &googleUser.ID,
+		Name:      googleUser.Name,
+		AvatarURL: &googleUser.Picture,
+	}
 	if err := h.db.Create(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// ==================== Telegram Login ====================
+
+// TelegramLogin - проверка данных от Telegram Login Widget
+func (h *Handler) TelegramLogin(c *gin.Context) {
+	var data TelegramAuthData
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
+
+	// Проверяем подпись от Telegram
+	if !h.verifyTelegramAuth(data) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Telegram signature"})
+		return
+	}
+
+	// Проверяем что данные не устарели (не старше 24 часов)
+	if time.Now().Unix()-data.AuthDate > 86400 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Auth data expired"})
+		return
+	}
+
+	// Ищем или создаём пользователя
+	user, err := h.findOrCreateTelegramUser(data)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
-	// Generate token
-	token, err := h.generateToken(user)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, AuthResponse{
-		Token: token,
-		User: UserResponse{
-			ID:    user.ID.String(),
-			Email: user.Email,
-			Name:  user.Name,
-		},
-	})
-}
-
-func (h *Handler) Login(c *gin.Context) {
-	var req LoginRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Find user
-	var user models.User
-	if err := h.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-		return
-	}
-
-	// Check password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-		return
-	}
-
-	// Generate token
+	// Генерируем JWT
 	token, err := h.generateToken(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
@@ -114,16 +219,102 @@ func (h *Handler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, AuthResponse{
 		Token: token,
 		User: UserResponse{
-			ID:    user.ID.String(),
-			Email: user.Email,
-			Name:  user.Name,
+			ID:        user.ID.String(),
+			Name:      user.Name,
+			AvatarURL: user.AvatarURL,
 		},
 	})
 }
 
+func (h *Handler) verifyTelegramAuth(data TelegramAuthData) bool {
+	if h.cfg.TelegramBotToken == "" {
+		return false
+	}
+
+	// Собираем строку для проверки
+	checkData := make(map[string]string)
+	checkData["id"] = strconv.FormatInt(data.ID, 10)
+	checkData["first_name"] = data.FirstName
+	if data.LastName != "" {
+		checkData["last_name"] = data.LastName
+	}
+	if data.Username != "" {
+		checkData["username"] = data.Username
+	}
+	if data.PhotoURL != "" {
+		checkData["photo_url"] = data.PhotoURL
+	}
+	checkData["auth_date"] = strconv.FormatInt(data.AuthDate, 10)
+
+	// Сортируем ключи
+	keys := make([]string, 0, len(checkData))
+	for k := range checkData {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// Формируем data-check-string
+	var dataCheckParts []string
+	for _, k := range keys {
+		dataCheckParts = append(dataCheckParts, fmt.Sprintf("%s=%s", k, checkData[k]))
+	}
+	dataCheckString := strings.Join(dataCheckParts, "\n")
+
+	// Вычисляем хэш
+	secretKey := sha256.Sum256([]byte(h.cfg.TelegramBotToken))
+	mac := hmac.New(sha256.New, secretKey[:])
+	mac.Write([]byte(dataCheckString))
+	expectedHash := hex.EncodeToString(mac.Sum(nil))
+
+	return expectedHash == data.Hash
+}
+
+func (h *Handler) findOrCreateTelegramUser(data TelegramAuthData) (*models.User, error) {
+	var user models.User
+
+	// Ищем по TelegramID
+	err := h.db.Where("telegram_id = ?", data.ID).First(&user).Error
+	if err == nil {
+		// Обновляем данные
+		name := data.FirstName
+		if data.LastName != "" {
+			name += " " + data.LastName
+		}
+		user.Name = name
+		if data.PhotoURL != "" {
+			user.AvatarURL = &data.PhotoURL
+		}
+		h.db.Save(&user)
+		return &user, nil
+	}
+
+	// Создаём нового пользователя
+	name := data.FirstName
+	if data.LastName != "" {
+		name += " " + data.LastName
+	}
+
+	user = models.User{
+		TelegramID: &data.ID,
+		Name:       name,
+	}
+	if data.PhotoURL != "" {
+		user.AvatarURL = &data.PhotoURL
+	}
+
+	if err := h.db.Create(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// ==================== Common ====================
+
+// Me - получить текущего пользователя
 func (h *Handler) Me(c *gin.Context) {
 	userID := c.GetString("userID")
-	
+
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
@@ -137,19 +328,22 @@ func (h *Handler) Me(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, UserResponse{
-		ID:    user.ID.String(),
-		Email: user.Email,
-		Name:  user.Name,
+		ID:        user.ID.String(),
+		Name:      user.Name,
+		AvatarURL: user.AvatarURL,
 	})
 }
 
-func (h *Handler) generateToken(user models.User) (string, error) {
+// Logout - выход (на клиенте просто удаляем токен)
+func (h *Handler) Logout(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
+}
+
+func (h *Handler) generateToken(user *models.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":   user.ID.String(),
-		"email": user.Email,
-		"exp":   time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
+		"sub": user.ID.String(),
+		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
 	})
 
 	return token.SignedString([]byte(h.cfg.JWTSecret))
 }
-

@@ -8,6 +8,7 @@ import (
 	"secret-santa/internal/database"
 	"secret-santa/internal/handlers"
 	"secret-santa/internal/middleware"
+	"secret-santa/internal/storage"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -32,12 +33,28 @@ func main() {
 		log.Fatal("Failed to run migrations:", err)
 	}
 
+	// Initialize S3 storage
+	s3Storage, err := storage.NewS3Storage(
+		cfg.AWSAccessKey,
+		cfg.AWSSecretKey,
+		cfg.AWSRegion,
+		cfg.S3Bucket,
+	)
+	if err != nil {
+		log.Fatal("Failed to initialize S3 storage:", err)
+	}
+
 	// Setup Gin
 	if cfg.Env == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	r := gin.Default()
+
+	// Trust only local proxies (не доверяем всем прокси)
+	if err := r.SetTrustedProxies([]string{"127.0.0.1", "::1"}); err != nil {
+		log.Fatal("Failed to set trusted proxies:", err)
+	}
 
 	// CORS
 	r.Use(cors.New(cors.Config{
@@ -53,31 +70,41 @@ func main() {
 	})
 
 	// Initialize handlers
-	h := handlers.New(db, cfg)
+	h := handlers.New(db, cfg, s3Storage)
 
 	// API routes
 	api := r.Group("/api")
 	{
-		// Auth routes
+		// Auth routes (OAuth)
 		auth := api.Group("/auth")
 		{
-			auth.POST("/register", h.Register)
-			auth.POST("/login", h.Login)
+			// Google OAuth
+			auth.GET("/google", h.GoogleLogin)
+			auth.GET("/google/callback", h.GoogleCallback)
+
+			// Telegram Login
+			auth.POST("/telegram", h.TelegramLogin)
+
+			// Current user
 			auth.GET("/me", middleware.Auth(cfg.JWTSecret), h.Me)
+			auth.POST("/logout", h.Logout)
 		}
 
 		// Protected routes
 		protected := api.Group("")
 		protected.Use(middleware.Auth(cfg.JWTSecret))
 		{
-			// Groups
-			protected.GET("/groups", h.GetGroups)
-			protected.POST("/groups", h.CreateGroup)
-			protected.GET("/groups/:id", h.GetGroup)
-			protected.DELETE("/groups/:id", h.DeleteGroup)
-			protected.POST("/groups/:id/join", h.JoinGroup)
-			protected.POST("/groups/:id/draw", h.DrawNames)
-			protected.GET("/groups/:id/my-assignment", h.GetMyAssignment)
+			// Upload
+			protected.POST("/upload/avatar", h.UploadAvatar)
+
+			// Raffles
+			protected.GET("/raffles", h.GetRaffles)
+			protected.POST("/raffles", h.CreateRaffle)
+			protected.GET("/raffles/:id", h.GetRaffle)
+			protected.DELETE("/raffles/:id", h.DeleteRaffle)
+			protected.POST("/raffles/:id/join", h.JoinRaffle)
+			protected.POST("/raffles/:id/draw", h.DrawNames)
+			protected.GET("/raffles/:id/my-assignment", h.GetMyAssignment)
 		}
 	}
 
@@ -92,4 +119,3 @@ func main() {
 		log.Fatal("Failed to start server:", err)
 	}
 }
-
