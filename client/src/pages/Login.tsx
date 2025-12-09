@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { CardGiftcard, Google } from "@mui/icons-material";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
+import * as api from "../services/api";
 
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -47,12 +47,13 @@ const Login = () => {
     window.onTelegramAuth = async (user: TelegramUser) => {
       try {
         console.log("Telegram auth data:", user);
-        const response = await axios.post(`${API_URL}/auth/telegram`, user);
-        console.log("Telegram auth response:", response.data);
-        await setToken(response.data.token);
+        const response = await api.telegramLogin(user);
+        console.log("Telegram auth response:", response);
+        await setToken(response.token);
         navigate("/");
-      } catch (err) {
+      } catch (err: any) {
         console.error("Telegram auth error:", err);
+        console.error("Error response:", err.response?.data);
         navigate("/login?error=telegram_failed");
       }
     };

@@ -3,8 +3,10 @@ node_modules/
 
 # Build outputs
 client/build/
+client/dist/
 server/tmp/
 *.exe
+*.tsbuildinfo
 
 # Environment
 .env

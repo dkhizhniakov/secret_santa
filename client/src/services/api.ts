@@ -37,6 +37,11 @@ export const getMe = async (): Promise<User> => {
   return data;
 };
 
+export const telegramLogin = async (telegramData: any): Promise<{ token: string; user: User }> => {
+  const { data } = await api.post('/auth/telegram', telegramData);
+  return data;
+};
+
 export const logout = async (): Promise<void> => {
   await api.post('/auth/logout');
   localStorage.removeItem('token');
