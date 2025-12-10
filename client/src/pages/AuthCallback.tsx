@@ -21,7 +21,14 @@ const AuthCallback: React.FC = () => {
 
     if (token) {
       setToken(token);
-      navigate('/');
+      // Проверяем сохраненный URL для редиректа
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectUrl);
+      } else {
+        navigate('/');
+      }
     } else {
       navigate('/login?error=no_token');
     }

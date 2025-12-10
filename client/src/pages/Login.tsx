@@ -52,7 +52,15 @@ const Login = () => {
         const response = await api.telegramLogin(user);
         console.log("Telegram auth response:", response);
         await setToken(response.token);
-        navigate("/");
+        
+        // Проверяем сохраненный URL для редиректа
+        const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+        if (redirectUrl) {
+          sessionStorage.removeItem('redirectAfterLogin');
+          navigate(redirectUrl);
+        } else {
+          navigate("/");
+        }
       } catch (err: any) {
         console.error("Telegram auth error:", err);
         console.error("Error response:", err.response?.data);
@@ -83,7 +91,14 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/");
+      // Проверяем сохраненный URL для редиректа
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectUrl);
+      } else {
+        navigate("/");
+      }
     }
   }, [isAuthenticated, navigate]);
 

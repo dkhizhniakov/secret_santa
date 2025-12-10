@@ -23,7 +23,13 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     return null;
   }
   
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    // Сохраняем текущий URL для возврата после логина
+    sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
+    return <Navigate to="/login" />;
+  }
+  
+  return <>{children}</>;
 };
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -46,7 +52,7 @@ function App() {
             <Routes>
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
               <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/join/:code" element={<JoinRaffle />} />
+              <Route path="/join/:code" element={<PrivateRoute><JoinRaffle /></PrivateRoute>} />
               <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
                 <Route index element={<Dashboard />} />
                 <Route path="profile" element={<Profile />} />
