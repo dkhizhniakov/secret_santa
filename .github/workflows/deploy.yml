@@ -84,9 +84,11 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
+          rm -f ~/.ssh/id_rsa ~/.ssh/known_hosts
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ steps.config.outputs.ec2_host }} >> ~/.ssh/known_hosts
+          echo "✅ SSH setup complete"
 
       - name: Create .env file
         env:
