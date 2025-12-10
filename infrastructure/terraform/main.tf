@@ -484,7 +484,7 @@ resource "aws_cloudfront_distribution" "main" {
 
   # EC2 Origin (API)
   origin {
-    domain_name = aws_eip.api.public_dns
+    domain_name = aws_route53_record.api.fqdn
     origin_id   = "EC2-api"
 
     custom_origin_config {
@@ -584,6 +584,15 @@ resource "aws_route53_record" "main" {
     zone_id                = aws_cloudfront_distribution.main.hosted_zone_id
     evaluate_target_health = false
   }
+}
+
+# API subdomain
+resource "aws_route53_record" "api" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "api.${local.full_domain}"
+  type    = "A"
+  ttl     = 300
+  records = [aws_eip.api.public_ip]
 }
 
 # ===========================================
