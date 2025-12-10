@@ -133,6 +133,7 @@ const RaffleDetail = () => {
   const handleProfileDialogClose = () => {
     setProfileDialogOpen(false);
     queryClient.invalidateQueries({ queryKey: ['raffle', id] });
+    queryClient.invalidateQueries({ queryKey: ['profile'] }); // Обновляем кэш глобального профиля
     showSnackbar(t('raffleDetail.profileUpdated'));
   };
 

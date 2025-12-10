@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Box,
   Card,
@@ -24,25 +24,39 @@ import { ParticipantProfile } from "../types";
 
 // Schema validation
 const getCreateRaffleSchema = (t: (key: string, params?: any) => string) =>
-  z.object({
-    name: z.string().min(1, t("validation.required")).max(100, t("validation.maxChars", { count: 100 })),
-    description: z.string().max(500, t("validation.maxChars", { count: 500 })).optional(),
-    budgetMin: z.number().min(0, t("validation.minValue", { min: 0 })).optional(),
-    budgetMax: z.number().min(0, t("validation.minValue", { min: 0 })).optional(),
-    currency: z.enum(["RUB", "USD", "EUR"]),
-    eventDate: z.string().min(1, t("validation.required")),
-  }).refine(
-    (data) => {
-      if (data.budgetMin && data.budgetMax) {
-        return data.budgetMin <= data.budgetMax;
+  z
+    .object({
+      name: z
+        .string()
+        .min(1, t("validation.required"))
+        .max(100, t("validation.maxChars", { count: 100 })),
+      description: z
+        .string()
+        .max(500, t("validation.maxChars", { count: 500 }))
+        .optional(),
+      budgetMin: z
+        .number()
+        .min(0, t("validation.minValue", { min: 0 }))
+        .optional(),
+      budgetMax: z
+        .number()
+        .min(0, t("validation.minValue", { min: 0 }))
+        .optional(),
+      currency: z.enum(["RUB", "USD", "EUR"]),
+      eventDate: z.string().min(1, t("validation.required")),
+    })
+    .refine(
+      (data) => {
+        if (data.budgetMin && data.budgetMax) {
+          return data.budgetMin <= data.budgetMax;
+        }
+        return true;
+      },
+      {
+        message: t("validation.budgetMinMax"),
+        path: ["budgetMax"],
       }
-      return true;
-    },
-    {
-      message: t("validation.budgetMinMax"),
-      path: ["budgetMax"],
-    }
-  );
+    );
 
 type CreateRaffleForm = z.infer<ReturnType<typeof getCreateRaffleSchema>>;
 
@@ -60,7 +74,9 @@ const CreateRaffle = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [createdRaffleId, setCreatedRaffleId] = useState<string | null>(null);
-  const [userProfile, setUserProfile] = useState<ParticipantProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<ParticipantProfile | null>(
+    null
+  );
 
   const {
     control,
@@ -81,7 +97,7 @@ const CreateRaffle = () => {
 
   // Загрузить профиль пользователя
   const { data: profile } = useQuery({
-    queryKey: ['profile'],
+    queryKey: ["profile"],
     queryFn: api.getProfile,
     retry: false,
   });
@@ -112,7 +128,8 @@ const CreateRaffle = () => {
   });
 
   const createRaffleMutation = useMutation({
-    mutationFn: (data: Parameters<typeof api.createRaffle>[0]) => api.createRaffle(data),
+    mutationFn: (data: Parameters<typeof api.createRaffle>[0]) =>
+      api.createRaffle(data),
     onSuccess: (raffle) => {
       // Показать диалог профиля организатору
       setCreatedRaffleId(raffle.id);
@@ -142,8 +159,11 @@ const CreateRaffle = () => {
     setAvatarPreview(null);
   };
 
+  const queryClient = useQueryClient();
+
   const handleProfileDialogClose = () => {
     setProfileDialogOpen(false);
+    queryClient.invalidateQueries({ queryKey: ["profile"] }); // Обновляем кэш глобального профиля
     if (createdRaffleId) {
       navigate(`/raffle/${createdRaffleId}`);
     }
@@ -167,7 +187,7 @@ const CreateRaffle = () => {
       } else if (data.budgetMax) {
         budget = `до ${data.budgetMax} ${data.currency}`;
       }
-      
+
       createRaffleMutation.mutate({
         name: data.name,
         description: data.description,
@@ -177,12 +197,14 @@ const CreateRaffle = () => {
       });
     } catch (error: any) {
       setFormError("root", {
-        message: error.response?.data?.error || t("createRaffle.errorUploadAvatar"),
+        message:
+          error.response?.data?.error || t("createRaffle.errorUploadAvatar"),
       });
     }
   };
 
-  const isSubmitting = uploadAvatarMutation.isPending || createRaffleMutation.isPending;
+  const isSubmitting =
+    uploadAvatarMutation.isPending || createRaffleMutation.isPending;
 
   return (
     <Box>
@@ -196,10 +218,21 @@ const CreateRaffle = () => {
 
       <Card sx={{ maxWidth: 600, mx: "auto" }}>
         <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-          <Typography variant="h4" fontWeight={700} gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+          <Typography
+            variant="h4"
+            fontWeight={700}
+            gutterBottom
+            sx={{ fontSize: { xs: "1.5rem", sm: "2rem" } }}
+          >
             🎁 {t("createRaffle.title")}
           </Typography>
-          <Typography color="text.secondary" sx={{ mb: { xs: 3, sm: 4 }, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+          <Typography
+            color="text.secondary"
+            sx={{
+              mb: { xs: 3, sm: 4 },
+              fontSize: { xs: "0.875rem", sm: "1rem" },
+            }}
+          >
             {t("createRaffle.subtitle")}
           </Typography>
 
@@ -211,20 +244,22 @@ const CreateRaffle = () => {
 
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Аватар */}
-            <Box sx={{ 
-              display: "flex", 
-              alignItems: "center", 
-              gap: { xs: 1.5, sm: 2 }, 
-              mb: { xs: 2, sm: 3 },
-              flexDirection: { xs: 'column', sm: 'row' }
-            }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 1.5, sm: 2 },
+                mb: { xs: 2, sm: 3 },
+                flexDirection: { xs: "column", sm: "row" },
+              }}
+            >
               <Avatar
                 src={avatarPreview || undefined}
                 sx={{ width: { xs: 64, sm: 80 }, height: { xs: 64, sm: 80 } }}
               >
                 🎅
               </Avatar>
-              <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
+              <Box sx={{ textAlign: { xs: "center", sm: "left" } }}>
                 <input
                   accept="image/*"
                   style={{ display: "none" }}
@@ -251,7 +286,11 @@ const CreateRaffle = () => {
                     <Delete />
                   </IconButton>
                 )}
-                <Typography variant="caption" display="block" color="text.secondary">
+                <Typography
+                  variant="caption"
+                  display="block"
+                  color="text.secondary"
+                >
                   {t("common.optional")}
                 </Typography>
               </Box>
@@ -291,16 +330,22 @@ const CreateRaffle = () => {
               )}
             />
 
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 2, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+            <Typography
+              variant="h6"
+              fontWeight={600}
+              sx={{ mb: 2, fontSize: { xs: "1rem", sm: "1.25rem" } }}
+            >
               {t("createRaffle.budgetSection")}
             </Typography>
 
-            <Box sx={{ 
-              display: "flex", 
-              gap: 2, 
-              mb: 3,
-              flexDirection: { xs: 'column', sm: 'row' }
-            }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                mb: 3,
+                flexDirection: { xs: "column", sm: "row" },
+              }}
+            >
               <Controller
                 name="budgetMin"
                 control={control}
@@ -312,7 +357,9 @@ const CreateRaffle = () => {
                     type="number"
                     value={value ?? ""}
                     onChange={(e) =>
-                      onChange(e.target.value ? Number(e.target.value) : undefined)
+                      onChange(
+                        e.target.value ? Number(e.target.value) : undefined
+                      )
                     }
                     error={!!errors.budgetMin}
                     helperText={errors.budgetMin?.message}
@@ -332,7 +379,9 @@ const CreateRaffle = () => {
                     type="number"
                     value={value ?? ""}
                     onChange={(e) =>
-                      onChange(e.target.value ? Number(e.target.value) : undefined)
+                      onChange(
+                        e.target.value ? Number(e.target.value) : undefined
+                      )
                     }
                     error={!!errors.budgetMax}
                     helperText={errors.budgetMax?.message}
@@ -351,7 +400,10 @@ const CreateRaffle = () => {
                     label={t("createRaffle.currency")}
                     error={!!errors.currency}
                     helperText={errors.currency?.message}
-                    sx={{ minWidth: { xs: '100%', sm: 120 }, width: { xs: '100%', sm: 'auto' } }}
+                    sx={{
+                      minWidth: { xs: "100%", sm: 120 },
+                      width: { xs: "100%", sm: "auto" },
+                    }}
                   >
                     <MenuItem value="RUB">₽ RUB</MenuItem>
                     <MenuItem value="USD">$ USD</MenuItem>
@@ -385,7 +437,9 @@ const CreateRaffle = () => {
               size="large"
               disabled={isSubmitting}
             >
-              {isSubmitting ? t("createRaffle.creating") : t("createRaffle.create")}
+              {isSubmitting
+                ? t("createRaffle.creating")
+                : t("createRaffle.create")}
             </Button>
           </form>
         </CardContent>

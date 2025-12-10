@@ -96,6 +96,7 @@ const Dashboard = () => {
   const handleProfileDialogClose = () => {
     setProfileDialogOpen(false);
     queryClient.invalidateQueries({ queryKey: ['raffles'] });
+    queryClient.invalidateQueries({ queryKey: ['profile'] }); // Обновляем кэш глобального профиля
     if (joinedRaffleId) {
       navigate(`/raffle/${joinedRaffleId}`);
     }
