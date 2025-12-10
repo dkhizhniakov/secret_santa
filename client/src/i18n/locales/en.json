@@ -134,8 +134,8 @@
   },
   "profile": {
     "title": "My Profile",
-    "subtitle": "Fill out your profile once, and this data will be automatically used in all raffles",
     "privacyNotice": "<strong>Privacy:</strong> Your phone number and delivery address will only be visible to your gift sender for correct delivery arrangement. Other participants will not see them.",
+    "englishVersion": "English version",
     "successSaved": "Profile successfully saved!",
     "errorSaving": "Error saving profile",
     "errorLoading": "Error loading profile",
@@ -143,7 +143,15 @@
     "about": "About",
     "aboutPlaceholder": "Tell us a bit about yourself...",
     "addressSection": "Delivery Address",
-    "addressAutoInfo": "English version will be filled automatically when you type",
+    "addressHelp": {
+      "title": "How to fill in the address:",
+      "line1": "Line 1",
+      "line1Help": "street, house number (e.g.: 123 Main St)",
+      "line2": "Line 2",
+      "line2Help": "apartment, floor, door code (e.g.: Apt 5, code 123)",
+      "english": "English version",
+      "englishHelp": "automatically filled for international delivery"
+    },
     "country": "Country",
     "addressLine1": "Address (line 1)",
     "addressLine1Placeholder": "123 Main St",

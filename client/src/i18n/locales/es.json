@@ -134,8 +134,8 @@
   },
   "profile": {
     "title": "Mi Perfil",
-    "subtitle": "Complete su perfil una vez y estos datos se utilizarán automáticamente en todos los sorteos",
     "privacyNotice": "<strong>Privacidad:</strong> Su teléfono y dirección de entrega solo serán visibles para el remitente de su regalo para la correcta organización de la entrega. Otros participantes no los verán.",
+    "englishVersion": "Versión en inglés",
     "successSaved": "¡Perfil guardado correctamente!",
     "errorSaving": "Error al guardar el perfil",
     "errorLoading": "Error al cargar el perfil",
@@ -143,7 +143,15 @@
     "about": "Sobre mí",
     "aboutPlaceholder": "Cuéntanos un poco sobre ti...",
     "addressSection": "Dirección de Entrega",
-    "addressAutoInfo": "La versión en inglés se completará automáticamente al escribir",
+    "addressHelp": {
+      "title": "Cómo completar la dirección:",
+      "line1": "Línea 1",
+      "line1Help": "calle, número (ej.: Calle Mayor, 123)",
+      "line2": "Línea 2",
+      "line2Help": "apartamento, piso, código de puerta (ej.: Apto 5, código 123)",
+      "english": "Versión en inglés",
+      "englishHelp": "se completa automáticamente para envío internacional"
+    },
     "country": "País",
     "addressLine1": "Dirección (línea 1)",
     "addressLine1Placeholder": "Calle Principal 123",

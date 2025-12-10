@@ -125,16 +125,6 @@ const CreateRaffle = () => {
     },
   });
 
-  const updateProfileMutation = useMutation({
-    mutationFn: ({ raffleId, profile }: { raffleId: string; profile: ParticipantProfile }) =>
-      api.updateMyRaffleProfile(raffleId, profile),
-    onSuccess: () => {
-      if (createdRaffleId) {
-        navigate(`/raffle/${createdRaffleId}`);
-      }
-    },
-  });
-
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -150,12 +140,6 @@ const CreateRaffle = () => {
   const handleAvatarDelete = () => {
     setAvatarFile(null);
     setAvatarPreview(null);
-  };
-
-  const handleProfileSubmit = async (data: ParticipantProfile) => {
-    if (createdRaffleId) {
-      await updateProfileMutation.mutateAsync({ raffleId: createdRaffleId, profile: data });
-    }
   };
 
   const handleProfileDialogClose = () => {
@@ -408,29 +392,15 @@ const CreateRaffle = () => {
       </Card>
 
       {/* Participant Profile Dialog */}
-      <ParticipantProfileDialog
-        open={profileDialogOpen}
-        onClose={handleProfileDialogClose}
-        onSubmit={handleProfileSubmit}
-        isOrganizer={true}
-        initialData={userProfile ? {
-          ...userProfile,
-          phone: userProfile.phone || undefined,
-          about: userProfile.about || undefined,
-          address_line1: userProfile.address_line1 || undefined,
-          address_line2: userProfile.address_line2 || undefined,
-          city: userProfile.city || undefined,
-          region: userProfile.region || undefined,
-          postal_code: userProfile.postal_code || undefined,
-          country: userProfile.country || undefined,
-          address_line1_en: userProfile.address_line1_en || undefined,
-          address_line2_en: userProfile.address_line2_en || undefined,
-          city_en: userProfile.city_en || undefined,
-          region_en: userProfile.region_en || undefined,
-          wishlist: userProfile.wishlist || undefined,
-          anti_wishlist: userProfile.anti_wishlist || undefined,
-        } : undefined}
-      />
+      {createdRaffleId && (
+        <ParticipantProfileDialog
+          open={profileDialogOpen}
+          onClose={handleProfileDialogClose}
+          raffleId={createdRaffleId}
+          isOrganizer={true}
+          initialData={userProfile || undefined}
+        />
+      )}
     </Box>
   );
 };

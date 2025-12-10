@@ -64,6 +64,10 @@ export const theme = createTheme({
         },
         contained: {
           background: 'linear-gradient(135deg, #c41e3a 0%, #8b0000 100%)',
+          '&.Mui-disabled': {
+            background: 'rgba(0, 0, 0, 0.12)',
+            color: 'rgba(0, 0, 0, 0.5)', // Более светлый серый текст для disabled кнопок (вместо стандартного 0.26)
+          },
         },
       },
     },

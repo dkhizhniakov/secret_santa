@@ -85,16 +85,6 @@ const Dashboard = () => {
     },
   });
 
-  const updateProfileMutation = useMutation({
-    mutationFn: ({ raffleId, profile }: { raffleId: string; profile: ParticipantProfile }) =>
-      api.updateMyRaffleProfile(raffleId, profile),
-    onSuccess: () => {
-      if (joinedRaffleId) {
-        navigate(`/raffle/${joinedRaffleId}`);
-      }
-    },
-  });
-
   const handleJoinRaffle = () => {
     if (!inviteCode.trim()) return;
     // Извлекаем код из ссылки если вставили полную ссылку
@@ -103,14 +93,9 @@ const Dashboard = () => {
     joinRaffleMutation.mutate(code);
   };
 
-  const handleProfileSubmit = async (data: ParticipantProfile) => {
-    if (joinedRaffleId) {
-      await updateProfileMutation.mutateAsync({ raffleId: joinedRaffleId, profile: data });
-    }
-  };
-
   const handleProfileDialogClose = () => {
     setProfileDialogOpen(false);
+    queryClient.invalidateQueries({ queryKey: ['raffles'] });
     if (joinedRaffleId) {
       navigate(`/raffle/${joinedRaffleId}`);
     }
@@ -331,28 +316,14 @@ const Dashboard = () => {
       </Dialog>
 
       {/* Participant Profile Dialog */}
-      <ParticipantProfileDialog
-        open={profileDialogOpen}
-        onClose={handleProfileDialogClose}
-        onSubmit={handleProfileSubmit}
-        initialData={userProfile ? {
-          ...userProfile,
-          phone: userProfile.phone || undefined,
-          about: userProfile.about || undefined,
-          address_line1: userProfile.address_line1 || undefined,
-          address_line2: userProfile.address_line2 || undefined,
-          city: userProfile.city || undefined,
-          region: userProfile.region || undefined,
-          postal_code: userProfile.postal_code || undefined,
-          country: userProfile.country || undefined,
-          address_line1_en: userProfile.address_line1_en || undefined,
-          address_line2_en: userProfile.address_line2_en || undefined,
-          city_en: userProfile.city_en || undefined,
-          region_en: userProfile.region_en || undefined,
-          wishlist: userProfile.wishlist || undefined,
-          anti_wishlist: userProfile.anti_wishlist || undefined,
-        } : undefined}
-      />
+      {joinedRaffleId && (
+        <ParticipantProfileDialog
+          open={profileDialogOpen}
+          onClose={handleProfileDialogClose}
+          raffleId={joinedRaffleId}
+          initialData={userProfile || undefined}
+        />
+      )}
     </Box>
   );
 };

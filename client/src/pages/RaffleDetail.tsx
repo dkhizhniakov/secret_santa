@@ -21,6 +21,7 @@ import {
   DialogActions,
   Skeleton,
   Snackbar,
+  Tooltip,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -109,16 +110,6 @@ const RaffleDetail = () => {
     },
   });
 
-  const updateProfileMutation = useMutation({
-    mutationFn: (profile: ParticipantProfile) =>
-      api.updateMyRaffleProfile(id!, profile),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['raffle', id] });
-      setProfileDialogOpen(false);
-      showSnackbar(t('raffleDetail.profileUpdated'));
-    },
-  });
-
   const showSnackbar = (message: string) => {
     setSnackbarMessage(message);
     setSnackbarOpen(true);
@@ -139,8 +130,10 @@ const RaffleDetail = () => {
     }
   };
 
-  const handleProfileSubmit = async (data: ParticipantProfile) => {
-    await updateProfileMutation.mutateAsync(data);
+  const handleProfileDialogClose = () => {
+    setProfileDialogOpen(false);
+    queryClient.invalidateQueries({ queryKey: ['raffle', id] });
+    showSnackbar(t('raffleDetail.profileUpdated'));
   };
 
   const formatDate = (date: string | null) => {
@@ -418,9 +411,13 @@ const RaffleDetail = () => {
                         {member.name}
                       </Typography>
                       {member.isProfileFilled ? (
-                        <CheckCircle fontSize="small" sx={{ color: 'success.main' }} />
+                        <Tooltip title={t('raffleDetail.profileFilled')} arrow>
+                          <CheckCircle fontSize="small" sx={{ color: 'success.main' }} />
+                        </Tooltip>
                       ) : (
-                        <Warning fontSize="small" sx={{ color: 'warning.main' }} />
+                        <Tooltip title={t('raffleDetail.profileNotFilled')} arrow>
+                          <Warning fontSize="small" sx={{ color: 'warning.main' }} />
+                        </Tooltip>
                       )}
                     </Box>
                   }
@@ -430,27 +427,6 @@ const RaffleDetail = () => {
               </ListItem>
             ))}
           </List>
-          <Box sx={{ 
-            display: 'flex', 
-            gap: { xs: 1.5, sm: 2 }, 
-            mt: 2, 
-            px: { xs: 0, sm: 2 }, 
-            pb: 1,
-            flexDirection: { xs: 'column', sm: 'row' }
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CheckCircle fontSize="small" sx={{ color: 'success.main' }} />
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                {t('raffleDetail.profileFilled')}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Warning fontSize="small" sx={{ color: 'warning.main' }} />
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                {t('raffleDetail.profileNotFilled')}
-              </Typography>
-            </Box>
-          </Box>
         </CardContent>
       </Card>
 
@@ -477,29 +453,15 @@ const RaffleDetail = () => {
       </Dialog>
 
       {/* Participant Profile Dialog */}
-      <ParticipantProfileDialog
-        open={profileDialogOpen}
-        onClose={() => setProfileDialogOpen(false)}
-        onSubmit={handleProfileSubmit}
-        isOrganizer={raffle?.isOwner}
-        initialData={userProfile ? {
-          ...userProfile,
-          phone: userProfile.phone || undefined,
-          about: userProfile.about || undefined,
-          address_line1: userProfile.address_line1 || undefined,
-          address_line2: userProfile.address_line2 || undefined,
-          city: userProfile.city || undefined,
-          region: userProfile.region || undefined,
-          postal_code: userProfile.postal_code || undefined,
-          country: userProfile.country || undefined,
-          address_line1_en: userProfile.address_line1_en || undefined,
-          address_line2_en: userProfile.address_line2_en || undefined,
-          city_en: userProfile.city_en || undefined,
-          region_en: userProfile.region_en || undefined,
-          wishlist: userProfile.wishlist || undefined,
-          anti_wishlist: userProfile.anti_wishlist || undefined,
-        } : undefined}
-      />
+      {id && (
+        <ParticipantProfileDialog
+          open={profileDialogOpen}
+          onClose={handleProfileDialogClose}
+          raffleId={id}
+          isOrganizer={raffle?.isOwner}
+          initialData={userProfile || undefined}
+        />
+      )}
 
       {/* Snackbar */}
       <Snackbar
