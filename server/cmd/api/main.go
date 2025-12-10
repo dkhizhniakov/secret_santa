@@ -69,6 +69,12 @@ func main() {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
+	// Debug routes endpoint (temporary)
+	r.GET("/debug/routes", func(c *gin.Context) {
+		routes := r.Routes()
+		c.JSON(200, gin.H{"routes": routes})
+	})
+
 	// Initialize handlers
 	h := handlers.New(db, cfg, s3Storage)
 
