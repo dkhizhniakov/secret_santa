@@ -135,8 +135,8 @@ jobs:
           ssh ubuntu@${{ steps.config.outputs.ec2_host }} << 'ENDSSH'
             cd /opt/secret-santa
             
-            # Build Docker image (no cache to force rebuild)
-            docker build --no-cache -t secret-santa-api ./server
+            # Build Docker image with cache but force source code update
+            docker build --build-arg CACHEBUST=$(date +%s) -t secret-santa-api ./server
             
             # Stop old container
             docker stop api 2>/dev/null || true
