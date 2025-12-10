@@ -83,7 +83,12 @@ jobs:
 
       - name: Setup SSH
         run: |
-          mkdir -p ~/.ssh
+          set -e
+          echo "Current user: $(whoami)"
+          echo "Home directory: $HOME"
+          ls -la ~ || echo "Cannot list home directory"
+          mkdir -p ~/.ssh || (echo "Failed to create ~/.ssh" && exit 1)
+          ls -la ~/.ssh || echo "Cannot list ~/.ssh"
           rm -f ~/.ssh/id_rsa ~/.ssh/known_hosts
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
