@@ -80,47 +80,15 @@ jobs:
           echo "ec2_host=$(jq -r '.ec2_host' deploy-config.json)" >> $GITHUB_OUTPUT
           echo "db_host=$(jq -r '.db_host' deploy-config.json)" >> $GITHUB_OUTPUT
           echo "domain=$(jq -r '.domain' deploy-config.json)" >> $GITHUB_OUTPUT
+          echo "aws_region=$(jq -r '.aws_region' deploy-config.json)" >> $GITHUB_OUTPUT
+          echo "s3_bucket=$(jq -r '.s3_bucket' deploy-config.json)" >> $GITHUB_OUTPUT
 
       - name: Setup SSH
         run: |
-          set -e
           mkdir -p ~/.ssh
-          rm -f ~/.ssh/id_rsa ~/.ssh/known_hosts
-          
-          # Check if EC2_SSH_KEY is set
-          if [ -z "${{ secrets.EC2_SSH_KEY }}" ]; then
-            echo "❌ ERROR: EC2_SSH_KEY secret is not set!"
-            exit 1
-          fi
-          
-          # Write SSH key
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          
-          # Check if key was written
-          if [ ! -s ~/.ssh/id_rsa ]; then
-            echo "❌ ERROR: SSH key file is empty!"
-            exit 1
-          fi
-          
           chmod 600 ~/.ssh/id_rsa
-          
-          # Validate SSH key format
-          ssh-keygen -l -f ~/.ssh/id_rsa || (echo "❌ ERROR: Invalid SSH key format!" && exit 1)
-          
-          # Check EC2 host
-          EC2_HOST="${{ steps.config.outputs.ec2_host }}"
-          if [ -z "$EC2_HOST" ]; then
-            echo "❌ ERROR: EC2 host is not set in config!"
-            exit 1
-          fi
-          
-          echo "🔍 EC2 host: $EC2_HOST"
-          
-          # Add host to known_hosts with timeout
-          echo "🔑 Adding host to known_hosts..."
-          ssh-keyscan -T 10 -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>&1 || (echo "⚠️  WARNING: ssh-keyscan failed, trying alternative method..." && echo "$EC2_HOST ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGq" >> ~/.ssh/known_hosts)
-          
-          echo "✅ SSH setup complete"
+          ssh-keyscan -H ${{ steps.config.outputs.ec2_host }} >> ~/.ssh/known_hosts
 
       - name: Create .env file
         env:
@@ -168,27 +136,12 @@ jobs:
         run: |
           ssh ubuntu@${{ steps.config.outputs.ec2_host }} << 'ENDSSH'
             cd /opt/secret-santa
-            
-            # Build Docker image with cache but force source code update
             docker build --build-arg CACHEBUST=$(date +%s) -t secret-santa-api ./server
-            
-            # Stop old container
             docker stop api 2>/dev/null || true
             docker rm api 2>/dev/null || true
-            
-            # Run new container
-            docker run -d \
-              --name api \
-              --restart always \
-              -p 8080:8080 \
-              --env-file .env \
-              secret-santa-api
-            
-            # Health check
+            docker run -d --name api --restart always -p 8080:8080 --env-file .env secret-santa-api
             sleep 5
             curl -f http://localhost:8080/health || exit 1
-            
-            echo "✅ Backend deployed successfully!"
           ENDSSH
 
       - name: Verify deployment
