@@ -15,9 +15,15 @@ import {
 } from "@mui/material";
 import { Save as SaveIcon } from "@mui/icons-material";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { matchIsValidTel, MuiTelInputCountry, MuiTelInputInfo } from "mui-tel-input";
+import {
+  matchIsValidTel,
+  MuiTelInputCountry,
+} from "mui-tel-input";
 import { getProfile, updateProfile } from "../services/api";
-import { ProfileFormFields, ProfileFormData } from "../components/ProfileFormFields";
+import {
+  ProfileFormFields,
+  ProfileFormData,
+} from "../components/ProfileFormFields";
 
 const getProfileSchema = (t: (key: string, params?: any) => string) =>
   z.object({
@@ -25,20 +31,71 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       .string()
       .optional()
       .nullable()
-      .refine((val) => !val || matchIsValidTel(val), t("validation.invalidPhone")),
-    about: z.string().max(1000, t("validation.maxChars", { count: 1000 })).optional().nullable(),
-    address_line1: z.string().max(200, t("validation.maxChars", { count: 200 })).optional().nullable(),
-    address_line2: z.string().max(200, t("validation.maxChars", { count: 200 })).optional().nullable(),
-    city: z.string().max(100, t("validation.maxChars", { count: 100 })).optional().nullable(),
-    region: z.string().max(100, t("validation.maxChars", { count: 100 })).optional().nullable(),
-    postal_code: z.string().max(20, t("validation.maxChars", { count: 20 })).optional().nullable(),
+      .refine(
+        (val) => !val || matchIsValidTel(val),
+        t("validation.invalidPhone")
+      ),
+    about: z
+      .string()
+      .max(1000, t("validation.maxChars", { count: 1000 }))
+      .optional()
+      .nullable(),
+    address_line1: z
+      .string()
+      .max(200, t("validation.maxChars", { count: 200 }))
+      .optional()
+      .nullable(),
+    address_line2: z
+      .string()
+      .max(200, t("validation.maxChars", { count: 200 }))
+      .optional()
+      .nullable(),
+    city: z
+      .string()
+      .max(100, t("validation.maxChars", { count: 100 }))
+      .optional()
+      .nullable(),
+    region: z
+      .string()
+      .max(100, t("validation.maxChars", { count: 100 }))
+      .optional()
+      .nullable(),
+    postal_code: z
+      .string()
+      .max(20, t("validation.maxChars", { count: 20 }))
+      .optional()
+      .nullable(),
     country: z.string().optional().nullable(),
-    address_line1_en: z.string().max(200, t("validation.maxChars", { count: 200 })).optional().nullable(),
-    address_line2_en: z.string().max(200, t("validation.maxChars", { count: 200 })).optional().nullable(),
-    city_en: z.string().max(100, t("validation.maxChars", { count: 100 })).optional().nullable(),
-    region_en: z.string().max(100, t("validation.maxChars", { count: 100 })).optional().nullable(),
-    wishlist: z.string().max(2000, t("validation.maxChars", { count: 2000 })).optional().nullable(),
-    anti_wishlist: z.string().max(1000, t("validation.maxChars", { count: 1000 })).optional().nullable(),
+    address_line1_en: z
+      .string()
+      .max(200, t("validation.maxChars", { count: 200 }))
+      .optional()
+      .nullable(),
+    address_line2_en: z
+      .string()
+      .max(200, t("validation.maxChars", { count: 200 }))
+      .optional()
+      .nullable(),
+    city_en: z
+      .string()
+      .max(100, t("validation.maxChars", { count: 100 }))
+      .optional()
+      .nullable(),
+    region_en: z
+      .string()
+      .max(100, t("validation.maxChars", { count: 100 }))
+      .optional()
+      .nullable(),
+    wishlist: z
+      .string()
+      .max(2000, t("validation.maxChars", { count: 2000 }))
+      .optional()
+      .nullable(),
+    anti_wishlist: z
+      .string()
+      .max(1000, t("validation.maxChars", { count: 1000 }))
+      .optional()
+      .nullable(),
   });
 
 export default function Profile() {
@@ -146,10 +203,6 @@ export default function Profile() {
     }
   }, [profile, reset, detectedCountry, setValue]);
 
-  const handlePhoneChange = (_value: string, info: MuiTelInputInfo) => {
-    // Можно добавить дополнительную логику при изменении телефона
-  };
-
   const onSubmit = (data: ProfileFormData) => {
     mutation.mutate(data);
   };
@@ -171,9 +224,16 @@ export default function Profile() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
+    <Container
+      maxWidth="md"
+      sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}
+    >
       <Paper sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 2, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{ mb: 2, fontSize: { xs: "1.5rem", sm: "2rem" } }}
+        >
           👤 {t("profile.title")}
         </Typography>
 
@@ -197,7 +257,6 @@ export default function Profile() {
             setValue={setValue}
             watch={watch}
             detectedCountry={detectedCountry}
-            onPhoneChange={handlePhoneChange}
             showPrivacyNotice={true}
           />
 
@@ -223,7 +282,11 @@ export default function Profile() {
               type="submit"
               variant="contained"
               startIcon={
-                mutation.isPending ? <CircularProgress size={20} /> : <SaveIcon />
+                mutation.isPending ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <SaveIcon />
+                )
               }
               disabled={mutation.isPending || !isDirty}
               sx={{ width: { xs: "100%", sm: "auto" } }}

@@ -11,7 +11,6 @@ import {
   List,
   ListItem,
   ListItemAvatar,
-  ListItemText,
   Button,
   Dialog,
   DialogTitle,
@@ -26,7 +25,7 @@ import {
 } from "@mui/material";
 import { Delete, Add, Block } from "@mui/icons-material";
 import * as api from "../services/api";
-import { Member, Exclusion } from "../types";
+import { Member } from "../types";
 
 interface ExclusionsManagerProps {
   raffleId: string;
