@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Box,
   Card,
@@ -18,29 +19,32 @@ import {
 } from "@mui/material";
 import { ArrowBack, PhotoCamera, Delete } from "@mui/icons-material";
 import * as api from "../services/api";
+import { ParticipantProfileDialog } from "../components/ParticipantProfileDialog";
+import { ParticipantProfile } from "../types";
 
 // Schema validation
-const createRaffleSchema = z.object({
-  name: z.string().min(1, "Введите название").max(100, "Максимум 100 символов"),
-  description: z.string().max(500, "Максимум 500 символов").optional(),
-  budgetMin: z.number().min(0, "Минимум 0").optional(),
-  budgetMax: z.number().min(0, "Минимум 0").optional(),
-  currency: z.enum(["RUB", "USD", "EUR"]),
-  eventDate: z.string().min(1, "Выберите дату"),
-}).refine(
-  (data) => {
-    if (data.budgetMin && data.budgetMax) {
-      return data.budgetMin <= data.budgetMax;
+const getCreateRaffleSchema = (t: (key: string, params?: any) => string) =>
+  z.object({
+    name: z.string().min(1, t("validation.required")).max(100, t("validation.maxChars", { count: 100 })),
+    description: z.string().max(500, t("validation.maxChars", { count: 500 })).optional(),
+    budgetMin: z.number().min(0, t("validation.minValue", { min: 0 })).optional(),
+    budgetMax: z.number().min(0, t("validation.minValue", { min: 0 })).optional(),
+    currency: z.enum(["RUB", "USD", "EUR"]),
+    eventDate: z.string().min(1, t("validation.required")),
+  }).refine(
+    (data) => {
+      if (data.budgetMin && data.budgetMax) {
+        return data.budgetMin <= data.budgetMax;
+      }
+      return true;
+    },
+    {
+      message: t("validation.budgetMinMax"),
+      path: ["budgetMax"],
     }
-    return true;
-  },
-  {
-    message: "Минимум не может быть больше максимума",
-    path: ["budgetMax"],
-  }
-);
+  );
 
-type CreateRaffleForm = z.infer<typeof createRaffleSchema>;
+type CreateRaffleForm = z.infer<ReturnType<typeof getCreateRaffleSchema>>;
 
 // Дефолтная дата - 31 декабря текущего года
 const getDefaultEventDate = () => {
@@ -51,8 +55,12 @@ const getDefaultEventDate = () => {
 
 const CreateRaffle = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [createdRaffleId, setCreatedRaffleId] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<ParticipantProfile | null>(null);
 
   const {
     control,
@@ -60,7 +68,7 @@ const CreateRaffle = () => {
     setError: setFormError,
     formState: { errors },
   } = useForm<CreateRaffleForm>({
-    resolver: zodResolver(createRaffleSchema),
+    resolver: zodResolver(getCreateRaffleSchema(t)),
     defaultValues: {
       name: "",
       description: "",
@@ -71,6 +79,34 @@ const CreateRaffle = () => {
     },
   });
 
+  // Загрузить профиль пользователя
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: api.getProfile,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setUserProfile({
+        phone: profile.phone,
+        about: profile.about,
+        address_line1: profile.address_line1,
+        address_line2: profile.address_line2,
+        city: profile.city,
+        region: profile.region,
+        postal_code: profile.postal_code,
+        country: profile.country,
+        address_line1_en: profile.address_line1_en,
+        address_line2_en: profile.address_line2_en,
+        city_en: profile.city_en,
+        region_en: profile.region_en,
+        wishlist: profile.wishlist,
+        anti_wishlist: profile.anti_wishlist,
+      });
+    }
+  }, [profile]);
+
   const uploadAvatarMutation = useMutation({
     mutationFn: (file: File) => api.uploadAvatar(file),
   });
@@ -78,12 +114,24 @@ const CreateRaffle = () => {
   const createRaffleMutation = useMutation({
     mutationFn: (data: Parameters<typeof api.createRaffle>[0]) => api.createRaffle(data),
     onSuccess: (raffle) => {
-      navigate(`/raffle/${raffle.id}`);
+      // Показать диалог профиля организатору
+      setCreatedRaffleId(raffle.id);
+      setProfileDialogOpen(true);
     },
     onError: (error: any) => {
       setFormError("root", {
-        message: error.response?.data?.error || "Ошибка создания розыгрыша",
+        message: error.response?.data?.error || t("createRaffle.errorCreate"),
       });
+    },
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: ({ raffleId, profile }: { raffleId: string; profile: ParticipantProfile }) =>
+      api.updateMyRaffleProfile(raffleId, profile),
+    onSuccess: () => {
+      if (createdRaffleId) {
+        navigate(`/raffle/${createdRaffleId}`);
+      }
     },
   });
 
@@ -102,6 +150,19 @@ const CreateRaffle = () => {
   const handleAvatarDelete = () => {
     setAvatarFile(null);
     setAvatarPreview(null);
+  };
+
+  const handleProfileSubmit = async (data: ParticipantProfile) => {
+    if (createdRaffleId) {
+      await updateProfileMutation.mutateAsync({ raffleId: createdRaffleId, profile: data });
+    }
+  };
+
+  const handleProfileDialogClose = () => {
+    setProfileDialogOpen(false);
+    if (createdRaffleId) {
+      navigate(`/raffle/${createdRaffleId}`);
+    }
   };
 
   const onSubmit = async (data: CreateRaffleForm) => {
@@ -132,7 +193,7 @@ const CreateRaffle = () => {
       });
     } catch (error: any) {
       setFormError("root", {
-        message: error.response?.data?.error || "Ошибка загрузки аватара",
+        message: error.response?.data?.error || t("createRaffle.errorUploadAvatar"),
       });
     }
   };
@@ -146,16 +207,16 @@ const CreateRaffle = () => {
         onClick={() => navigate("/")}
         sx={{ mb: 3 }}
       >
-        Назад
+        {t("common.back")}
       </Button>
 
       <Card sx={{ maxWidth: 600, mx: "auto" }}>
         <CardContent sx={{ p: 4 }}>
           <Typography variant="h4" fontWeight={700} gutterBottom>
-            🎁 Новый розыгрыш
+            🎁 {t("createRaffle.title")}
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 4 }}>
-            Создайте розыгрыш и пригласите друзей для игры в Тайного Санту
+            {t("createRaffle.subtitle")}
           </Typography>
 
           {errors.root && (
@@ -188,7 +249,7 @@ const CreateRaffle = () => {
                     startIcon={<PhotoCamera />}
                     size="small"
                   >
-                    Загрузить аватар
+                    {t("createRaffle.uploadAvatar")}
                   </Button>
                 </label>
                 {avatarPreview && (
@@ -201,7 +262,7 @@ const CreateRaffle = () => {
                   </IconButton>
                 )}
                 <Typography variant="caption" display="block" color="text.secondary">
-                  Опционально
+                  {t("common.optional")}
                 </Typography>
               </Box>
             </Box>
@@ -213,8 +274,8 @@ const CreateRaffle = () => {
                 <TextField
                   {...field}
                   fullWidth
-                  label="Название розыгрыша"
-                  placeholder="Например: Новогодний офис 2024"
+                  label={t("createRaffle.nameLabel")}
+                  placeholder={t("createRaffle.namePlaceholder")}
                   error={!!errors.name}
                   helperText={errors.name?.message}
                   sx={{ mb: 3 }}
@@ -229,10 +290,10 @@ const CreateRaffle = () => {
                 <TextField
                   {...field}
                   fullWidth
-                  label="Описание"
+                  label={t("createRaffle.descriptionLabel")}
                   multiline
                   rows={3}
-                  placeholder="Опишите правила или оставьте пожелания для участников"
+                  placeholder={t("createRaffle.descriptionPlaceholder")}
                   error={!!errors.description}
                   helperText={errors.description?.message}
                   sx={{ mb: 3 }}
@@ -241,7 +302,7 @@ const CreateRaffle = () => {
             />
 
             <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-              Бюджет подарка
+              {t("createRaffle.budgetSection")}
             </Typography>
 
             <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
@@ -252,7 +313,7 @@ const CreateRaffle = () => {
                   <TextField
                     {...field}
                     fullWidth
-                    label="От"
+                    label={t("createRaffle.budgetFrom")}
                     type="number"
                     value={value ?? ""}
                     onChange={(e) =>
@@ -272,7 +333,7 @@ const CreateRaffle = () => {
                   <TextField
                     {...field}
                     fullWidth
-                    label="До"
+                    label={t("createRaffle.budgetTo")}
                     type="number"
                     value={value ?? ""}
                     onChange={(e) =>
@@ -292,7 +353,7 @@ const CreateRaffle = () => {
                   <TextField
                     {...field}
                     select
-                    label="Валюта"
+                    label={t("createRaffle.currency")}
                     error={!!errors.currency}
                     helperText={errors.currency?.message}
                     sx={{ minWidth: 120 }}
@@ -312,7 +373,7 @@ const CreateRaffle = () => {
                 <TextField
                   {...field}
                   fullWidth
-                  label="Дата обмена подарками"
+                  label={t("createRaffle.eventDateLabel")}
                   type="date"
                   error={!!errors.eventDate}
                   helperText={errors.eventDate?.message}
@@ -329,11 +390,36 @@ const CreateRaffle = () => {
               size="large"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Создание..." : "Создать розыгрыш"}
+              {isSubmitting ? t("createRaffle.creating") : t("createRaffle.create")}
             </Button>
           </form>
         </CardContent>
       </Card>
+
+      {/* Participant Profile Dialog */}
+      <ParticipantProfileDialog
+        open={profileDialogOpen}
+        onClose={handleProfileDialogClose}
+        onSubmit={handleProfileSubmit}
+        isOrganizer={true}
+        initialData={userProfile ? {
+          ...userProfile,
+          phone: userProfile.phone || undefined,
+          about: userProfile.about || undefined,
+          address_line1: userProfile.address_line1 || undefined,
+          address_line2: userProfile.address_line2 || undefined,
+          city: userProfile.city || undefined,
+          region: userProfile.region || undefined,
+          postal_code: userProfile.postal_code || undefined,
+          country: userProfile.country || undefined,
+          address_line1_en: userProfile.address_line1_en || undefined,
+          address_line2_en: userProfile.address_line2_en || undefined,
+          city_en: userProfile.city_en || undefined,
+          region_en: userProfile.region_en || undefined,
+          wishlist: userProfile.wishlist || undefined,
+          anti_wishlist: userProfile.anti_wishlist || undefined,
+        } : undefined}
+      />
     </Box>
   );
 };

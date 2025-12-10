@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Raffle, User, Assignment } from '../types';
+import { Raffle, User, Assignment, UserProfile, UpdateProfileRequest, ParticipantProfile, Giftee } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -47,6 +47,17 @@ export const logout = async (): Promise<void> => {
   localStorage.removeItem('token');
 };
 
+// Profile
+export const getProfile = async (): Promise<UserProfile> => {
+  const { data } = await api.get<UserProfile>('/profile');
+  return data;
+};
+
+export const updateProfile = async (profile: UpdateProfileRequest): Promise<UserProfile> => {
+  const { data } = await api.put<UserProfile>('/profile', profile);
+  return data;
+};
+
 // Raffles
 export const getRaffles = async (): Promise<Raffle[]> => {
   const { data } = await api.get<Raffle[]>('/raffles');
@@ -92,6 +103,16 @@ export const drawNames = async (id: string): Promise<Raffle> => {
 
 export const getMyAssignment = async (raffleId: string): Promise<Assignment> => {
   const { data } = await api.get<Assignment>(`/raffles/${raffleId}/my-assignment`);
+  return data;
+};
+
+// Participant profile in raffle
+export const updateMyRaffleProfile = async (raffleId: string, profile: ParticipantProfile): Promise<void> => {
+  await api.put(`/raffles/${raffleId}/my-profile`, profile);
+};
+
+export const getMyGiftee = async (raffleId: string): Promise<Giftee> => {
+  const { data } = await api.get<Giftee>(`/raffles/${raffleId}/my-giftee`);
   return data;
 };
 

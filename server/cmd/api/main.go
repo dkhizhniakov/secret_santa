@@ -103,6 +103,10 @@ func main() {
 			// Upload
 			protected.POST("/upload/avatar", h.UploadAvatar)
 
+			// Profile
+			protected.GET("/profile", h.GetProfile)
+			protected.PUT("/profile", h.UpdateProfile)
+
 			// Raffles
 			protected.GET("/raffles", h.GetRaffles)
 			protected.POST("/raffles", h.CreateRaffle)
@@ -111,6 +115,10 @@ func main() {
 			protected.POST("/raffles/:id/join", h.JoinRaffle)
 			protected.POST("/raffles/:id/draw", h.DrawNames)
 			protected.GET("/raffles/:id/my-assignment", h.GetMyAssignment)
+			
+			// Participant profile in raffle
+			protected.PUT("/raffles/:id/my-profile", h.UpdateMyProfile)
+			protected.GET("/raffles/:id/my-giftee", h.GetMyGiftee)
 		}
 	}
 

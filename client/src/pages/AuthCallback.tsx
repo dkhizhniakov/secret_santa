@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 
 const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const { setToken } = useAuth();
 
@@ -37,7 +39,7 @@ const AuthCallback: React.FC = () => {
       }}
     >
       <CircularProgress sx={{ color: 'white', mb: 2 }} />
-      <Typography color="white">Авторизация...</Typography>
+      <Typography color="white">{t('login.authenticating')}</Typography>
     </Box>
   );
 };

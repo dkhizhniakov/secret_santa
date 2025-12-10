@@ -31,6 +31,7 @@ func Connect(cfg *config.Config) (*gorm.DB, error) {
 func Migrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&models.User{},
+		&models.UserProfile{},
 		&models.Group{},
 		&models.Member{},
 		&models.Assignment{},

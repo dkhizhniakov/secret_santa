@@ -1,0 +1,181 @@
+{
+  "app": {
+    "name": "Secret Santa"
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "participants": "participants",
+    "optional": "Optional",
+    "or": "or"
+  },
+  "nav": {
+    "createRaffle": "Create Raffle",
+    "myProfile": "My Profile",
+    "logout": "Logout"
+  },
+  "login": {
+    "title": "Secret Santa",
+    "subtitle": "Organize gift exchanges with friends and colleagues",
+    "googleButton": "Sign in with Google",
+    "authenticating": "Authenticating...",
+    "termsAccept": "By signing in, you agree to the terms of use",
+    "errors": {
+      "no_code": "Authorization error: code not received",
+      "invalid_state": "Security error: please try again",
+      "exchange_failed": "Token exchange error",
+      "userinfo_failed": "Failed to retrieve user data",
+      "db_error": "Database error",
+      "telegram_failed": "Telegram authorization error",
+      "unknown": "An error occurred during login"
+    }
+  },
+  "dashboard": {
+    "title": "My Raffles",
+    "subtitle": "Manage your Secret Santa games",
+    "join": "Join",
+    "empty": {
+      "title": "You don't have any raffles yet",
+      "subtitle": "Create a new raffle or join using an invite code",
+      "create": "Create Raffle"
+    },
+    "status": {
+      "drawn": "Draw completed",
+      "pending": "Awaiting draw"
+    },
+    "budget": "Budget",
+    "joinDialog": {
+      "title": "Join a Raffle",
+      "inviteCodeLabel": "Invite Code or Link",
+      "inviteCodePlaceholder": "Paste code (abc12345) or link",
+      "joining": "Joining...",
+      "join": "Join",
+      "error": "Failed to join"
+    }
+  },
+  "createRaffle": {
+    "title": "New Raffle",
+    "subtitle": "Create a raffle and invite friends to play Secret Santa",
+    "uploadAvatar": "Upload Avatar",
+    "nameLabel": "Raffle Name",
+    "namePlaceholder": "For example: Office Christmas 2024",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe the rules or leave wishes for participants",
+    "budgetSection": "Gift Budget",
+    "budgetFrom": "From",
+    "budgetTo": "To",
+    "currency": "Currency",
+    "eventDateLabel": "Gift Exchange Date",
+    "creating": "Creating...",
+    "create": "Create Raffle",
+    "errorCreate": "Error creating raffle",
+    "errorUploadAvatar": "Error uploading avatar"
+  },
+  "joinRaffle": {
+    "joining": "Joining the raffle...",
+    "errorJoin": "Failed to join",
+    "goHome": "Go Home"
+  },
+  "giftee": {
+    "title": "Your Giftee",
+    "subtitle": "All the information you need to send a gift",
+    "wishlist": "What they'd like to receive",
+    "antiWishlist": "What NOT to give",
+    "contactInfo": "Contact Information",
+    "privacyNotice": "This information is confidential and visible only to you",
+    "deliveryAddress": "Delivery Address",
+    "localAddress": "In local language:",
+    "englishAddress": "In English:",
+    "noContactInfo": "Participant hasn't provided contact information",
+    "errorLoading": "Error loading giftee information"
+  },
+  "raffleDetail": {
+    "inviteCode": "Invite Code",
+    "inviteLink": "Invite Link",
+    "copyCode": "Copy Code",
+    "copyLink": "Copy Link",
+    "codeCopied": "Code copied! 📋",
+    "linkCopied": "Link copied! 📋",
+    "eventDate": "Event Date",
+    "notSpecified": "Not specified",
+    "budget": "Budget",
+    "participants": "Participants",
+    "organizer": "Organizer",
+    "notFound": "Raffle not found",
+    "drawButton": "Conduct Draw",
+    "drawing": "Drawing...",
+    "drawSuccess": "Draw completed! 🎉",
+    "drawError": "Draw error",
+    "drawConfirmTitle": "Conduct the draw?",
+    "drawConfirmText": "After the draw, results cannot be changed. Make sure all participants have joined.",
+    "deleteButton": "Delete Raffle",
+    "deleteConfirmTitle": "Delete raffle?",
+    "deleteConfirmText": "This action cannot be undone. All data will be deleted.",
+    "deleting": "Deleting...",
+    "yourGiftee": "You are gifting to",
+    "viewGifteeProfile": "View Giftee Profile",
+    "notDrawnYet": "Draw not yet conducted",
+    "needMoreParticipants": "ℹ️ Need at least 3 participants for the draw. Currently: {{current}} of {{needed}}. Invite friends!",
+    "profilesNotFilled": "⚠️ Not all participants have filled their profiles! Draw will be available only after all profiles are completed.",
+    "profileFilled": "Profile filled",
+    "profileNotFilled": "Profile not filled",
+    "yourProfileNotFilled": "⚠️ You haven't filled your profile yet! Fill it so your Secret Santa knows what to gift you.",
+    "fillProfile": "Fill Profile",
+    "fillMyProfile": "Fill My Profile",
+    "profileUpdated": "Profile successfully updated!"
+  },
+  "participantProfile": {
+    "title": "Your Raffle Profile",
+    "subtitle": "Fill out your profile for this raffle. This data will only be visible to your gift sender.",
+    "organizerSubtitle": "You're participating too! Fill out your profile so your Secret Santa knows what to gift you and where to send it.",
+    "skip": "Skip"
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Fill out your profile once, and this data will be automatically used in all raffles",
+    "privacyNotice": "<strong>Privacy:</strong> Your phone number and delivery address will only be visible to your gift sender for correct delivery arrangement. Other participants will not see them.",
+    "successSaved": "Profile successfully saved!",
+    "errorSaving": "Error saving profile",
+    "errorLoading": "Error loading profile",
+    "phone": "Phone",
+    "about": "About",
+    "aboutPlaceholder": "Tell us a bit about yourself...",
+    "addressSection": "Delivery Address",
+    "addressAutoInfo": "English version will be filled automatically when you type",
+    "country": "Country",
+    "addressLine1": "Address (line 1)",
+    "addressLine1Placeholder": "123 Main St",
+    "addressLine1En": "Address (line 1) - English",
+    "addressLine1EnPlaceholder": "123 Main St",
+    "addressLine2": "Address (line 2)",
+    "addressLine2Placeholder": "Apt 5, code 123",
+    "addressLine2En": "Address (line 2) - English",
+    "addressLine2EnPlaceholder": "Apt 5, code 123",
+    "city": "City",
+    "cityPlaceholder": "New York",
+    "cityEn": "City - English",
+    "cityEnPlaceholder": "New York",
+    "region": "Region/State",
+    "regionPlaceholder": "New York",
+    "regionEn": "Region - English",
+    "regionEnPlaceholder": "New York",
+    "postalCode": "Postal Code",
+    "postalCodePlaceholder": "10001",
+    "wishlistSection": "Wishes",
+    "wishlist": "🎁 What I'd like to receive",
+    "wishlistPlaceholder": "My wishes: books, tea, sweets...",
+    "antiWishlist": "🚫 What NOT to give",
+    "antiWishlistPlaceholder": "Allergies, what I definitely don't want...",
+    "autoFilled": "Auto-filled"
+  },
+  "validation": {
+    "required": "Required field",
+    "minChars": "Minimum {{count}} characters",
+    "maxChars": "Maximum {{count}} characters",
+    "invalidPhone": "Invalid phone number format",
+    "minValue": "Minimum {{min}}",
+    "budgetMinMax": "Minimum cannot be greater than maximum"
+  }
+}

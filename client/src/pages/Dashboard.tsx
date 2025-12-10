@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
@@ -26,17 +27,51 @@ import {
   Link as LinkIcon,
 } from '@mui/icons-material';
 import * as api from '../services/api';
+import { ParticipantProfileDialog } from '../components/ParticipantProfileDialog';
+import { ParticipantProfile } from '../types';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [joinedRaffleId, setJoinedRaffleId] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<ParticipantProfile | null>(null);
 
   const { data: raffles = [], isLoading } = useQuery({
     queryKey: ['raffles'],
     queryFn: api.getRaffles,
   });
+
+  // Загрузить профиль пользователя
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: api.getProfile,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setUserProfile({
+        phone: profile.phone,
+        about: profile.about,
+        address_line1: profile.address_line1,
+        address_line2: profile.address_line2,
+        city: profile.city,
+        region: profile.region,
+        postal_code: profile.postal_code,
+        country: profile.country,
+        address_line1_en: profile.address_line1_en,
+        address_line2_en: profile.address_line2_en,
+        city_en: profile.city_en,
+        region_en: profile.region_en,
+        wishlist: profile.wishlist,
+        anti_wishlist: profile.anti_wishlist,
+      });
+    }
+  }, [profile]);
 
   const joinRaffleMutation = useMutation({
     mutationFn: (code: string) => api.joinRaffle(code),
@@ -44,18 +79,46 @@ const Dashboard = () => {
       queryClient.invalidateQueries({ queryKey: ['raffles'] });
       setJoinDialogOpen(false);
       setInviteCode('');
-      navigate(`/raffle/${raffle.id}`);
+      // Показать диалог профиля
+      setJoinedRaffleId(raffle.id);
+      setProfileDialogOpen(true);
+    },
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: ({ raffleId, profile }: { raffleId: string; profile: ParticipantProfile }) =>
+      api.updateMyRaffleProfile(raffleId, profile),
+    onSuccess: () => {
+      if (joinedRaffleId) {
+        navigate(`/raffle/${joinedRaffleId}`);
+      }
     },
   });
 
   const handleJoinRaffle = () => {
     if (!inviteCode.trim()) return;
-    joinRaffleMutation.mutate(inviteCode.trim());
+    // Извлекаем код из ссылки если вставили полную ссылку
+    const codeMatch = inviteCode.match(/\/join\/([a-zA-Z0-9]+)/);
+    const code = codeMatch ? codeMatch[1] : inviteCode.trim();
+    joinRaffleMutation.mutate(code);
+  };
+
+  const handleProfileSubmit = async (data: ParticipantProfile) => {
+    if (joinedRaffleId) {
+      await updateProfileMutation.mutateAsync({ raffleId: joinedRaffleId, profile: data });
+    }
+  };
+
+  const handleProfileDialogClose = () => {
+    setProfileDialogOpen(false);
+    if (joinedRaffleId) {
+      navigate(`/raffle/${joinedRaffleId}`);
+    }
   };
 
   const formatDate = (date: string | null) => {
     if (!date) return null;
-    return new Date(date).toLocaleDateString('ru-RU', {
+    return new Date(date).toLocaleDateString(i18n.language, {
       day: 'numeric',
       month: 'long',
     });
@@ -66,10 +129,10 @@ const Dashboard = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Box>
           <Typography variant="h4" fontWeight={700} gutterBottom>
-            🎄 Мои розыгрыши
+            🎄 {t("dashboard.title")}
           </Typography>
           <Typography color="text.secondary">
-            Управляйте своими играми в Тайного Санту
+            {t("dashboard.subtitle")}
           </Typography>
         </Box>
         <Button
@@ -77,7 +140,7 @@ const Dashboard = () => {
           startIcon={<LinkIcon />}
           onClick={() => setJoinDialogOpen(true)}
         >
-          Присоединиться
+          {t("dashboard.join")}
         </Button>
       </Box>
 
@@ -94,10 +157,10 @@ const Dashboard = () => {
           <CardContent>
             <Typography variant="h1" sx={{ fontSize: 64, mb: 2 }}>🎁</Typography>
             <Typography variant="h5" gutterBottom>
-              У вас пока нет розыгрышей
+              {t("dashboard.empty.title")}
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>
-              Создайте новый розыгрыш или присоединитесь по коду приглашения
+              {t("dashboard.empty.subtitle")}
             </Typography>
             <Button
               variant="contained"
@@ -105,14 +168,14 @@ const Dashboard = () => {
               onClick={() => navigate('/create')}
               sx={{ mr: 2 }}
             >
-              Создать розыгрыш
+              {t("dashboard.empty.create")}
             </Button>
             <Button
               variant="outlined"
               startIcon={<LinkIcon />}
               onClick={() => setJoinDialogOpen(true)}
             >
-              Присоединиться
+              {t("dashboard.join")}
             </Button>
           </CardContent>
         </Card>
@@ -134,13 +197,13 @@ const Dashboard = () => {
                         {raffle.isDrawn ? (
                           <Chip
                             icon={<CheckCircle />}
-                            label="Жеребьевка проведена"
+                            label={t("dashboard.status.drawn")}
                             color="success"
                             size="small"
                           />
                         ) : (
                           <Chip
-                            label="Ожидает жеребьевки"
+                            label={t("dashboard.status.pending")}
                             color="warning"
                             size="small"
                           />
@@ -168,7 +231,7 @@ const Dashboard = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <GroupIcon fontSize="small" />
                         <Typography variant="body2">
-                          {raffle.members.length} участников
+                          {raffle.members.length} {t("common.participants")}
                         </Typography>
                       </Box>
                       {raffle.eventDate && (
@@ -193,7 +256,7 @@ const Dashboard = () => {
                           display: 'inline-block',
                         }}
                       >
-                        💰 Бюджет: {raffle.budget}
+                        💰 {t("dashboard.budget")}: {raffle.budget}
                       </Typography>
                     )}
                   </CardContent>
@@ -206,20 +269,20 @@ const Dashboard = () => {
 
       {/* Join Dialog */}
       <Dialog open={joinDialogOpen} onClose={() => setJoinDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Присоединиться к розыгрышу</DialogTitle>
+        <DialogTitle>{t("dashboard.joinDialog.title")}</DialogTitle>
         <DialogContent>
           {joinRaffleMutation.isError && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {(joinRaffleMutation.error as any).response?.data?.error || 'Ошибка присоединения'}
+              {(joinRaffleMutation.error as any).response?.data?.error || t("dashboard.joinDialog.error")}
             </Alert>
           )}
           <TextField
             autoFocus
             fullWidth
-            label="Код приглашения"
+            label={t("dashboard.joinDialog.inviteCodeLabel")}
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
-            placeholder="Например: abc12345"
+            placeholder={t("dashboard.joinDialog.inviteCodePlaceholder")}
             sx={{ mt: 1 }}
             onKeyPress={(e) => {
               if (e.key === 'Enter') {
@@ -229,16 +292,40 @@ const Dashboard = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setJoinDialogOpen(false)}>Отмена</Button>
+          <Button onClick={() => setJoinDialogOpen(false)}>{t("common.cancel")}</Button>
           <Button
             variant="contained"
             onClick={handleJoinRaffle}
             disabled={!inviteCode.trim() || joinRaffleMutation.isPending}
           >
-            {joinRaffleMutation.isPending ? 'Присоединение...' : 'Присоединиться'}
+            {joinRaffleMutation.isPending ? t("dashboard.joinDialog.joining") : t("dashboard.joinDialog.join")}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Participant Profile Dialog */}
+      <ParticipantProfileDialog
+        open={profileDialogOpen}
+        onClose={handleProfileDialogClose}
+        onSubmit={handleProfileSubmit}
+        initialData={userProfile ? {
+          ...userProfile,
+          phone: userProfile.phone || undefined,
+          about: userProfile.about || undefined,
+          address_line1: userProfile.address_line1 || undefined,
+          address_line2: userProfile.address_line2 || undefined,
+          city: userProfile.city || undefined,
+          region: userProfile.region || undefined,
+          postal_code: userProfile.postal_code || undefined,
+          country: userProfile.country || undefined,
+          address_line1_en: userProfile.address_line1_en || undefined,
+          address_line2_en: userProfile.address_line2_en || undefined,
+          city_en: userProfile.city_en || undefined,
+          region_en: userProfile.region_en || undefined,
+          wishlist: userProfile.wishlist || undefined,
+          anti_wishlist: userProfile.anti_wishlist || undefined,
+        } : undefined}
+      />
     </Box>
   );
 };

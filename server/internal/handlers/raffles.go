@@ -38,10 +38,50 @@ type RaffleResponse struct {
 }
 
 type MemberResponse struct {
-	ID        string  `json:"id"`
-	UserID    string  `json:"userId"`
-	Name      string  `json:"name"`
-	AvatarURL *string `json:"avatarUrl"`
+	ID               string  `json:"id"`
+	UserID           string  `json:"userId"`
+	Name             string  `json:"name"`
+	AvatarURL        *string `json:"avatarUrl"`
+	IsProfileFilled  bool    `json:"isProfileFilled"`
+}
+
+// Профиль участника в розыгрыше (для обновления своего профиля)
+type ParticipantProfileRequest struct {
+	Phone          *string `json:"phone"`
+	About          *string `json:"about"`
+	AddressLine1   *string `json:"address_line1"`
+	AddressLine2   *string `json:"address_line2"`
+	City           *string `json:"city"`
+	Region         *string `json:"region"`
+	PostalCode     *string `json:"postal_code"`
+	Country        *string `json:"country"`
+	AddressLine1En *string `json:"address_line1_en"`
+	AddressLine2En *string `json:"address_line2_en"`
+	CityEn         *string `json:"city_en"`
+	RegionEn       *string `json:"region_en"`
+	Wishlist       *string `json:"wishlist"`
+	AntiWishlist   *string `json:"anti_wishlist"`
+}
+
+// Полная информация о получателе подарка
+type GifteeResponse struct {
+	ID             string  `json:"id"`
+	Name           string  `json:"name"`
+	AvatarURL      *string `json:"avatarUrl"`
+	Phone          *string `json:"phone"`
+	About          *string `json:"about"`
+	AddressLine1   *string `json:"address_line1"`
+	AddressLine2   *string `json:"address_line2"`
+	City           *string `json:"city"`
+	Region         *string `json:"region"`
+	PostalCode     *string `json:"postal_code"`
+	Country        *string `json:"country"`
+	AddressLine1En *string `json:"address_line1_en"`
+	AddressLine2En *string `json:"address_line2_en"`
+	CityEn         *string `json:"city_en"`
+	RegionEn       *string `json:"region_en"`
+	Wishlist       *string `json:"wishlist"`
+	AntiWishlist   *string `json:"anti_wishlist"`
 }
 
 type AssignmentResponse struct {
@@ -224,9 +264,29 @@ func (h *Handler) JoinRaffle(c *gin.Context) {
 		return
 	}
 
+	// Копируем профиль из UserProfile (если есть)
+	var userProfile models.UserProfile
 	member := models.Member{
 		GroupID: group.ID,
 		UserID:  uid,
+	}
+	
+	if err := h.db.Where("user_id = ?", uid).First(&userProfile).Error; err == nil {
+		// Копируем профиль в member
+		member.Phone = userProfile.Phone
+		member.About = userProfile.About
+		member.AddressLine1 = userProfile.AddressLine1
+		member.AddressLine2 = userProfile.AddressLine2
+		member.City = userProfile.City
+		member.Region = userProfile.Region
+		member.PostalCode = userProfile.PostalCode
+		member.Country = userProfile.Country
+		member.AddressLine1En = userProfile.AddressLine1En
+		member.AddressLine2En = userProfile.AddressLine2En
+		member.CityEn = userProfile.CityEn
+		member.RegionEn = userProfile.RegionEn
+		member.Wishlist = userProfile.Wishlist
+		member.AntiWishlist = userProfile.AntiWishlist
 	}
 
 	if err := h.db.Create(&member).Error; err != nil {
@@ -272,20 +332,35 @@ func (h *Handler) DrawNames(c *gin.Context) {
 		return
 	}
 
+	// Check if all members have filled profiles
+	for _, m := range group.Members {
+		if !isProfileFilled(m) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "All participants must fill their profiles before drawing"})
+			return
+		}
+	}
+
 	// Perform draw (derangement - no one gets themselves)
 	memberIDs := make([]uuid.UUID, len(group.Members))
+	memberMap := make(map[uuid.UUID]*models.Member)
 	for i, m := range group.Members {
-		memberIDs[i] = m.UserID
+		memberIDs[i] = m.ID
+		memberMap[m.ID] = &group.Members[i]
 	}
 
 	assignments := derangement(memberIDs)
 
-	// Save assignments
-	for giverID, receiverID := range assignments {
+	// Save assignments to members
+	for giverMemberID, gifteeMemberID := range assignments {
+		giver := memberMap[giverMemberID]
+		giver.GifteeID = &gifteeMemberID
+		h.db.Save(giver)
+		
+		// Also save to Assignment table for backward compatibility
 		assignment := models.Assignment{
 			GroupID:    gid,
-			GiverID:    giverID,
-			ReceiverID: receiverID,
+			GiverID:    giver.UserID,
+			ReceiverID: memberMap[gifteeMemberID].UserID,
 		}
 		h.db.Create(&assignment)
 	}
@@ -323,14 +398,26 @@ func (h *Handler) GetMyAssignment(c *gin.Context) {
 	})
 }
 
+// isProfileFilled проверяет, заполнен ли профиль участника
+func isProfileFilled(m models.Member) bool {
+	// Считаем профиль заполненным, если есть хотя бы одно из ключевых полей
+	hasAddress := m.AddressLine1 != nil && *m.AddressLine1 != "" && 
+	              m.City != nil && *m.City != "" && 
+	              m.Country != nil && *m.Country != ""
+	hasWishlist := m.Wishlist != nil && *m.Wishlist != ""
+	
+	return hasAddress || hasWishlist
+}
+
 func (h *Handler) raffleToResponse(g models.Group, currentUserID uuid.UUID) RaffleResponse {
 	members := make([]MemberResponse, len(g.Members))
 	for i, m := range g.Members {
 		members[i] = MemberResponse{
-			ID:        m.ID.String(),
-			UserID:    m.UserID.String(),
-			Name:      m.User.Name,
-			AvatarURL: m.User.AvatarURL,
+			ID:              m.ID.String(),
+			UserID:          m.UserID.String(),
+			Name:            m.User.Name,
+			AvatarURL:       m.User.AvatarURL,
+			IsProfileFilled: isProfileFilled(m),
 		}
 	}
 
@@ -354,6 +441,120 @@ func (h *Handler) raffleToResponse(g models.Group, currentUserID uuid.UUID) Raff
 		Members:     members,
 		CreatedAt:   g.CreatedAt.Format(time.RFC3339),
 	}
+}
+
+// UpdateMyProfile - обновить профиль участника в конкретном розыгрыше
+func (h *Handler) UpdateMyProfile(c *gin.Context) {
+	userID := c.GetString("userID")
+	uid, _ := uuid.Parse(userID)
+	raffleID := c.Param("id")
+	rid, err := uuid.Parse(raffleID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid raffle ID"})
+		return
+	}
+
+	var req ParticipantProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Найти участника
+	var member models.Member
+	if err := h.db.Where("group_id = ? AND user_id = ?", rid, uid).First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "You are not a member of this raffle"})
+		return
+	}
+
+	// Обновить профиль
+	member.Phone = req.Phone
+	member.About = req.About
+	member.AddressLine1 = req.AddressLine1
+	member.AddressLine2 = req.AddressLine2
+	member.City = req.City
+	member.Region = req.Region
+	member.PostalCode = req.PostalCode
+	member.Country = req.Country
+	member.AddressLine1En = req.AddressLine1En
+	member.AddressLine2En = req.AddressLine2En
+	member.CityEn = req.CityEn
+	member.RegionEn = req.RegionEn
+	member.Wishlist = req.Wishlist
+	member.AntiWishlist = req.AntiWishlist
+
+	if err := h.db.Save(&member).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Profile updated"})
+}
+
+// GetMyGiftee - получить информацию о моем получателе (после жеребьевки)
+func (h *Handler) GetMyGiftee(c *gin.Context) {
+	userID := c.GetString("userID")
+	uid, _ := uuid.Parse(userID)
+	raffleID := c.Param("id")
+	rid, err := uuid.Parse(raffleID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid raffle ID"})
+		return
+	}
+
+	// Проверить что розыгрыш проведен
+	var group models.Group
+	if err := h.db.First(&group, rid).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Raffle not found"})
+		return
+	}
+
+	if !group.IsDrawn {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Draw not yet conducted"})
+		return
+	}
+
+	// Найти участника
+	var member models.Member
+	if err := h.db.Where("group_id = ? AND user_id = ?", rid, uid).First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "You are not a member of this raffle"})
+		return
+	}
+
+	// Проверить что есть получатель
+	if member.GifteeID == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No giftee assigned"})
+		return
+	}
+
+	// Загрузить получателя с его User
+	var giftee models.Member
+	if err := h.db.Preload("User").First(&giftee, *member.GifteeID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Giftee not found"})
+		return
+	}
+
+	response := GifteeResponse{
+		ID:             giftee.ID.String(),
+		Name:           giftee.User.Name,
+		AvatarURL:      giftee.User.AvatarURL,
+		Phone:          giftee.Phone,
+		About:          giftee.About,
+		AddressLine1:   giftee.AddressLine1,
+		AddressLine2:   giftee.AddressLine2,
+		City:           giftee.City,
+		Region:         giftee.Region,
+		PostalCode:     giftee.PostalCode,
+		Country:        giftee.Country,
+		AddressLine1En: giftee.AddressLine1En,
+		AddressLine2En: giftee.AddressLine2En,
+		CityEn:         giftee.CityEn,
+		RegionEn:       giftee.RegionEn,
+		Wishlist:       giftee.Wishlist,
+		AntiWishlist:   giftee.AntiWishlist,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func generateInviteCode() (string, error) {

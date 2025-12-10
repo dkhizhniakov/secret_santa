@@ -8,9 +8,11 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 import CreateRaffle from './pages/CreateRaffle';
 import RaffleDetail from './pages/RaffleDetail';
 import JoinRaffle from './pages/JoinRaffle';
+import GifteePage from './pages/GifteePage';
 
 const queryClient = new QueryClient();
 
@@ -47,8 +49,10 @@ function App() {
               <Route path="/join/:code" element={<JoinRaffle />} />
               <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
                 <Route index element={<Dashboard />} />
+                <Route path="profile" element={<Profile />} />
                 <Route path="create" element={<CreateRaffle />} />
                 <Route path="raffle/:id" element={<RaffleDetail />} />
+                <Route path="raffle/:id/giftee" element={<GifteePage />} />
               </Route>
             </Routes>
           </BrowserRouter>

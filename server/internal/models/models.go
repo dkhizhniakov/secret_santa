@@ -17,13 +17,41 @@ type User struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
+// UserProfile - дефолтный профиль пользователя для переиспользования в розыгрышах
+type UserProfile struct {
+	ID     uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"id"`
+	UserID uuid.UUID `gorm:"type:uuid;not null;uniqueIndex" json:"user_id"`
+	User   User      `gorm:"foreignKey:UserID" json:"-"`
+	Phone  *string   `json:"phone"`
+	About  *string   `gorm:"type:text" json:"about"`
+
+	// Адрес на местном языке
+	AddressLine1 *string `json:"address_line1"`
+	AddressLine2 *string `json:"address_line2"`
+	City         *string `json:"city"`
+	Region       *string `json:"region"` // Область/регион/штат
+	PostalCode   *string `json:"postal_code"`
+	Country      *string `json:"country"`
+
+	// Адрес на английском (автозаполняемый)
+	AddressLine1En *string `json:"address_line1_en"`
+	AddressLine2En *string `json:"address_line2_en"`
+	CityEn         *string `json:"city_en"`
+	RegionEn       *string `json:"region_en"`
+
+	Wishlist     *string   `gorm:"type:text" json:"wishlist"`      // Что хочу получить
+	AntiWishlist *string   `gorm:"type:text" json:"anti_wishlist"` // Аллергии, что не дарить
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
 // Group (будет заменено на Raffle позже)
 type Group struct {
 	ID          uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name        string    `gorm:"not null"`
 	Description string
-	AvatarURL   *string   // URL аватара розыгрыша
-	InviteCode  string `gorm:"uniqueIndex;not null"`
+	AvatarURL   *string // URL аватара розыгрыша
+	InviteCode  string  `gorm:"uniqueIndex;not null"`
 	Budget      string
 	EventDate   *time.Time
 	OwnerID     uuid.UUID `gorm:"type:uuid;not null"`
@@ -34,13 +62,41 @@ type Group struct {
 	UpdatedAt   time.Time
 }
 
+// Member (Participant) - участник конкретного розыгрыша
 type Member struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	GroupID   uuid.UUID `gorm:"type:uuid;not null"`
-	Group     Group     `gorm:"foreignKey:GroupID"`
-	UserID    uuid.UUID `gorm:"type:uuid;not null"`
-	User      User      `gorm:"foreignKey:UserID"`
-	CreatedAt time.Time
+	ID      uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	GroupID uuid.UUID `gorm:"type:uuid;not null"`
+	Group   Group     `gorm:"foreignKey:GroupID"`
+	UserID  uuid.UUID `gorm:"type:uuid;not null"`
+	User    User      `gorm:"foreignKey:UserID"`
+
+	// Профиль участника в этом розыгрыше (копируется из UserProfile при вступлении)
+	Phone *string `json:"phone"`
+	About *string `gorm:"type:text" json:"about"`
+
+	// Адрес на местном языке
+	AddressLine1 *string `json:"address_line1"`
+	AddressLine2 *string `json:"address_line2"`
+	City         *string `json:"city"`
+	Region       *string `json:"region"`
+	PostalCode   *string `json:"postal_code"`
+	Country      *string `json:"country"`
+
+	// Адрес на английском
+	AddressLine1En *string `json:"address_line1_en"`
+	AddressLine2En *string `json:"address_line2_en"`
+	CityEn         *string `json:"city_en"`
+	RegionEn       *string `json:"region_en"`
+
+	Wishlist     *string `gorm:"type:text" json:"wishlist"`
+	AntiWishlist *string `gorm:"type:text" json:"anti_wishlist"`
+
+	// Кому дарит (заполняется после жеребьевки)
+	GifteeID *uuid.UUID `gorm:"type:uuid" json:"giftee_id"`
+	Giftee   *Member    `gorm:"foreignKey:GifteeID" json:"-"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Assignment struct {

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Card,
@@ -36,6 +37,7 @@ declare global {
 
 const Login = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const { isAuthenticated, loading, setToken } = useAuth();
   const error = searchParams.get("error");
@@ -121,31 +123,18 @@ const Login = () => {
           <Box sx={{ textAlign: "center", mb: 4 }}>
             <CardGiftcard sx={{ fontSize: 64, color: "primary.main", mb: 2 }} />
             <Typography variant="h4" fontWeight={800} color="primary">
-              Secret Santa
+              {t("login.title")}
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 1 }}>
-              Организуйте обмен подарками с друзьями и коллегами
+              {t("login.subtitle")}
             </Typography>
           </Box>
 
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
-              {error === "no_code" && "Ошибка авторизации: код не получен"}
-              {error === "invalid_state" && "Ошибка безопасности: попробуйте снова"}
-              {error === "exchange_failed" && "Ошибка обмена токена"}
-              {error === "userinfo_failed" &&
-                "Не удалось получить данные пользователя"}
-              {error === "db_error" && "Ошибка базы данных"}
-              {error === "telegram_failed" &&
-                "Ошибка авторизации через Telegram"}
-              {![
-                "no_code",
-                "invalid_state",
-                "exchange_failed",
-                "userinfo_failed",
-                "db_error",
-                "telegram_failed",
-              ].includes(error || "") && "Произошла ошибка при входе"}
+              {t(`login.errors.${error}`) !== `login.errors.${error}` 
+                ? t(`login.errors.${error}`)
+                : t("login.errors.unknown")}
             </Alert>
           )}
 
@@ -162,12 +151,12 @@ const Login = () => {
               "&:hover": { bgcolor: "#3367d6" },
             }}
           >
-            Войти через Google
+            {t("login.googleButton")}
           </Button>
 
           <Divider sx={{ my: 2 }}>
             <Typography color="text.secondary" variant="body2">
-              или
+              {t("common.or")}
             </Typography>
           </Divider>
 
@@ -187,7 +176,7 @@ const Login = () => {
             variant="body2"
             sx={{ mt: 4 }}
           >
-            Входя, вы соглашаетесь с условиями использования
+            {t("login.termsAccept")}
           </Typography>
         </CardContent>
       </Card>

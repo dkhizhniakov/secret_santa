@@ -1,0 +1,181 @@
+{
+  "app": {
+    "name": "Secret Santa"
+  },
+  "common": {
+    "back": "Atrás",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "participants": "participantes",
+    "optional": "Opcional",
+    "or": "o"
+  },
+  "nav": {
+    "createRaffle": "Crear Sorteo",
+    "myProfile": "Mi Perfil",
+    "logout": "Cerrar Sesión"
+  },
+  "login": {
+    "title": "Secret Santa",
+    "subtitle": "Organiza intercambios de regalos con amigos y colegas",
+    "googleButton": "Iniciar sesión con Google",
+    "authenticating": "Autenticando...",
+    "termsAccept": "Al iniciar sesión, aceptas los términos de uso",
+    "errors": {
+      "no_code": "Error de autorización: código no recibido",
+      "invalid_state": "Error de seguridad: inténtalo de nuevo",
+      "exchange_failed": "Error de intercambio de token",
+      "userinfo_failed": "No se pudieron obtener los datos del usuario",
+      "db_error": "Error de base de datos",
+      "telegram_failed": "Error de autorización de Telegram",
+      "unknown": "Ocurrió un error al iniciar sesión"
+    }
+  },
+  "dashboard": {
+    "title": "Mis Sorteos",
+    "subtitle": "Gestiona tus juegos de Amigo Invisible",
+    "join": "Unirse",
+    "empty": {
+      "title": "Aún no tienes sorteos",
+      "subtitle": "Crea un nuevo sorteo o únete usando un código de invitación",
+      "create": "Crear Sorteo"
+    },
+    "status": {
+      "drawn": "Sorteo realizado",
+      "pending": "Esperando sorteo"
+    },
+    "budget": "Presupuesto",
+    "joinDialog": {
+      "title": "Unirse a un Sorteo",
+      "inviteCodeLabel": "Código o Enlace de Invitación",
+      "inviteCodePlaceholder": "Pegue código (abc12345) o enlace",
+      "joining": "Uniéndose...",
+      "join": "Unirse",
+      "error": "Error al unirse"
+    }
+  },
+  "createRaffle": {
+    "title": "Nuevo Sorteo",
+    "subtitle": "Crea un sorteo e invita a amigos para jugar al Amigo Invisible",
+    "uploadAvatar": "Subir Avatar",
+    "nameLabel": "Nombre del Sorteo",
+    "namePlaceholder": "Por ejemplo: Oficina Navidad 2024",
+    "descriptionLabel": "Descripción",
+    "descriptionPlaceholder": "Describe las reglas o deja deseos para los participantes",
+    "budgetSection": "Presupuesto del Regalo",
+    "budgetFrom": "Desde",
+    "budgetTo": "Hasta",
+    "currency": "Moneda",
+    "eventDateLabel": "Fecha de Intercambio de Regalos",
+    "creating": "Creando...",
+    "create": "Crear Sorteo",
+    "errorCreate": "Error al crear sorteo",
+    "errorUploadAvatar": "Error al subir avatar"
+  },
+  "joinRaffle": {
+    "joining": "Uniéndose al sorteo...",
+    "errorJoin": "No se pudo unir",
+    "goHome": "Ir al Inicio"
+  },
+  "giftee": {
+    "title": "Tu Destinatario",
+    "subtitle": "Toda la información que necesitas para enviar un regalo",
+    "wishlist": "Qué le gustaría recibir",
+    "antiWishlist": "Qué NO regalar",
+    "contactInfo": "Información de Contacto",
+    "privacyNotice": "Esta información es confidencial y solo visible para ti",
+    "deliveryAddress": "Dirección de Entrega",
+    "localAddress": "En idioma local:",
+    "englishAddress": "En inglés:",
+    "noContactInfo": "El participante no proporcionó información de contacto",
+    "errorLoading": "Error al cargar información del destinatario"
+  },
+  "raffleDetail": {
+    "inviteCode": "Código de Invitación",
+    "inviteLink": "Enlace de Invitación",
+    "copyCode": "Copiar Código",
+    "copyLink": "Copiar Enlace",
+    "codeCopied": "¡Código copiado! 📋",
+    "linkCopied": "¡Enlace copiado! 📋",
+    "eventDate": "Fecha del Evento",
+    "notSpecified": "No especificada",
+    "budget": "Presupuesto",
+    "participants": "Participantes",
+    "organizer": "Organizador",
+    "notFound": "Sorteo no encontrado",
+    "drawButton": "Realizar Sorteo",
+    "drawing": "Realizando...",
+    "drawSuccess": "¡Sorteo realizado! 🎉",
+    "drawError": "Error en el sorteo",
+    "drawConfirmTitle": "¿Realizar el sorteo?",
+    "drawConfirmText": "Después del sorteo, los resultados no se pueden cambiar. Asegúrate de que todos los participantes se hayan unido.",
+    "deleteButton": "Eliminar Sorteo",
+    "deleteConfirmTitle": "¿Eliminar sorteo?",
+    "deleteConfirmText": "Esta acción no se puede deshacer. Todos los datos serán eliminados.",
+    "deleting": "Eliminando...",
+    "yourGiftee": "Vas a regalar a",
+    "viewGifteeProfile": "Ver Perfil del Destinatario",
+    "notDrawnYet": "Sorteo aún no realizado",
+    "needMoreParticipants": "ℹ️ Se necesitan al menos 3 participantes para el sorteo. Actualmente: {{current}} de {{needed}}. ¡Invita a amigos!",
+    "profilesNotFilled": "⚠️ ¡No todos los participantes han completado sus perfiles! El sorteo estará disponible solo después de que se completen todos los perfiles.",
+    "profileFilled": "Perfil completado",
+    "profileNotFilled": "Perfil no completado",
+    "yourProfileNotFilled": "⚠️ ¡Aún no has completado tu perfil! Complétalo para que tu Amigo Invisible sepa qué regalarte.",
+    "fillProfile": "Completar Perfil",
+    "fillMyProfile": "Completar Mi Perfil",
+    "profileUpdated": "¡Perfil actualizado con éxito!"
+  },
+  "participantProfile": {
+    "title": "Tu Perfil en el Sorteo",
+    "subtitle": "Complete su perfil para este sorteo. Estos datos solo serán visibles para el remitente de su regalo.",
+    "organizerSubtitle": "¡Tú también participas! Complete su perfil para que su Amigo Invisible sepa qué regalarle y dónde enviarlo.",
+    "skip": "Omitir"
+  },
+  "profile": {
+    "title": "Mi Perfil",
+    "subtitle": "Complete su perfil una vez y estos datos se utilizarán automáticamente en todos los sorteos",
+    "privacyNotice": "<strong>Privacidad:</strong> Su teléfono y dirección de entrega solo serán visibles para el remitente de su regalo para la correcta organización de la entrega. Otros participantes no los verán.",
+    "successSaved": "¡Perfil guardado correctamente!",
+    "errorSaving": "Error al guardar el perfil",
+    "errorLoading": "Error al cargar el perfil",
+    "phone": "Teléfono",
+    "about": "Sobre mí",
+    "aboutPlaceholder": "Cuéntanos un poco sobre ti...",
+    "addressSection": "Dirección de Entrega",
+    "addressAutoInfo": "La versión en inglés se completará automáticamente al escribir",
+    "country": "País",
+    "addressLine1": "Dirección (línea 1)",
+    "addressLine1Placeholder": "Calle Principal 123",
+    "addressLine1En": "Dirección (línea 1) - English",
+    "addressLine1EnPlaceholder": "Main Street 123",
+    "addressLine2": "Dirección (línea 2)",
+    "addressLine2Placeholder": "Apto 5, código 123",
+    "addressLine2En": "Dirección (línea 2) - English",
+    "addressLine2EnPlaceholder": "Apt 5, code 123",
+    "city": "Ciudad",
+    "cityPlaceholder": "Madrid",
+    "cityEn": "Ciudad - English",
+    "cityEnPlaceholder": "Madrid",
+    "region": "Región/Comunidad",
+    "regionPlaceholder": "Comunidad de Madrid",
+    "regionEn": "Región - English",
+    "regionEnPlaceholder": "Community of Madrid",
+    "postalCode": "Código Postal",
+    "postalCodePlaceholder": "28001",
+    "wishlistSection": "Deseos",
+    "wishlist": "🎁 Qué me gustaría recibir",
+    "wishlistPlaceholder": "Mis deseos: libros, té, dulces...",
+    "antiWishlist": "🚫 Qué NO regalar",
+    "antiWishlistPlaceholder": "Alergias, lo que definitivamente no quiero...",
+    "autoFilled": "Autocompletado"
+  },
+  "validation": {
+    "required": "Required field",
+    "minChars": "Minimum {{count}} characters",
+    "maxChars": "Maximum {{count}} characters",
+    "invalidPhone": "Invalid phone number format",
+    "minValue": "Minimum {{min}}",
+    "budgetMinMax": "Minimum cannot be greater than maximum"
+  }
+}

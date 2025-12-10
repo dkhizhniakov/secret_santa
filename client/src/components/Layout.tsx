@@ -1,5 +1,6 @@
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   AppBar,
   Toolbar,
@@ -12,11 +13,13 @@ import {
   Menu,
   MenuItem,
 } from '@mui/material';
-import { CardGiftcard, Add, Logout } from '@mui/icons-material';
+import { CardGiftcard, Add, Logout, Person } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Layout: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -43,7 +46,7 @@ const Layout: React.FC = () => {
             sx={{ flexGrow: 1, cursor: 'pointer', fontWeight: 700 }}
             onClick={() => navigate('/')}
           >
-            Secret Santa
+            {t('app.name')}
           </Typography>
           
           <Button
@@ -52,8 +55,10 @@ const Layout: React.FC = () => {
             onClick={() => navigate('/create')}
             sx={{ mr: 2 }}
           >
-            Создать розыгрыш
+            {t('nav.createRaffle')}
           </Button>
+
+          <LanguageSwitcher />
 
           <IconButton onClick={handleMenu}>
             <Avatar 
@@ -73,9 +78,13 @@ const Layout: React.FC = () => {
                 {user?.name}
               </Typography>
             </MenuItem>
+            <MenuItem onClick={() => { handleClose(); navigate('/profile'); }}>
+              <Person sx={{ mr: 1, fontSize: 20 }} />
+              {t('nav.myProfile')}
+            </MenuItem>
             <MenuItem onClick={handleLogout}>
               <Logout sx={{ mr: 1, fontSize: 20 }} />
-              Выйти
+              {t('nav.logout')}
             </MenuItem>
           </Menu>
         </Toolbar>
