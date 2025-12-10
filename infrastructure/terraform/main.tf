@@ -227,7 +227,7 @@ resource "aws_key_pair" "main" {
 
 resource "aws_instance" "api" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t3.micro" # Free Tier eligible
+  instance_type          = "t3.small" # 2 vCPU, 2 GB RAM - better for Docker builds
   key_name               = aws_key_pair.main.key_name
   vpc_security_group_ids = [aws_security_group.ec2.id]
   subnet_id              = aws_subnet.public_1.id
