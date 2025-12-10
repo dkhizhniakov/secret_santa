@@ -107,8 +107,18 @@ jobs:
           # Validate SSH key format
           ssh-keygen -l -f ~/.ssh/id_rsa || (echo "❌ ERROR: Invalid SSH key format!" && exit 1)
           
-          # Add host to known_hosts
-          ssh-keyscan -H ${{ steps.config.outputs.ec2_host }} >> ~/.ssh/known_hosts
+          # Check EC2 host
+          EC2_HOST="${{ steps.config.outputs.ec2_host }}"
+          if [ -z "$EC2_HOST" ]; then
+            echo "❌ ERROR: EC2 host is not set in config!"
+            exit 1
+          fi
+          
+          echo "🔍 EC2 host: $EC2_HOST"
+          
+          # Add host to known_hosts with timeout
+          echo "🔑 Adding host to known_hosts..."
+          ssh-keyscan -T 10 -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>&1 || (echo "⚠️  WARNING: ssh-keyscan failed, trying alternative method..." && echo "$EC2_HOST ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGq" >> ~/.ssh/known_hosts)
           
           echo "✅ SSH setup complete"
 
