@@ -126,6 +126,7 @@ jobs:
 
       - name: Upload files to EC2
         run: |
+          ssh ubuntu@${{ steps.config.outputs.ec2_host }} "rm -rf /opt/secret-santa/server"
           scp .env ubuntu@${{ steps.config.outputs.ec2_host }}:/opt/secret-santa/.env
           scp -r server ubuntu@${{ steps.config.outputs.ec2_host }}:/opt/secret-santa/
 
@@ -134,8 +135,8 @@ jobs:
           ssh ubuntu@${{ steps.config.outputs.ec2_host }} << 'ENDSSH'
             cd /opt/secret-santa
             
-            # Build Docker image
-            docker build -t secret-santa-api ./server
+            # Build Docker image (no cache to force rebuild)
+            docker build --no-cache -t secret-santa-api ./server
             
             # Stop old container
             docker stop api 2>/dev/null || true
