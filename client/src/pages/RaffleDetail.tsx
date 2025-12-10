@@ -35,6 +35,7 @@ import {
 } from '@mui/icons-material';
 import * as api from '../services/api';
 import { ParticipantProfileDialog } from '../components/ParticipantProfileDialog';
+import { ExclusionsManager } from '../components/ExclusionsManager';
 import { ParticipantProfile } from '../types';
 
 const RaffleDetail = () => {
@@ -386,6 +387,17 @@ const RaffleDetail = () => {
             </Button>
           </CardContent>
         </Card>
+      )}
+
+      {/* Exclusions Manager (только для владельца до жеребьевки) */}
+      {raffle.isOwner && !raffle.isDrawn && (
+        <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+          <ExclusionsManager
+            raffleId={id!}
+            members={raffle.members}
+            isOwner={raffle.isOwner}
+          />
+        </Box>
       )}
 
       {/* Members */}

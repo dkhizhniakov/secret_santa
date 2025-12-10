@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Raffle, User, Assignment, UserProfile, UpdateProfileRequest, ParticipantProfile, Giftee } from '../types';
+import { Raffle, User, Assignment, UserProfile, UpdateProfileRequest, ParticipantProfile, Giftee, Exclusion, CreateExclusionRequest } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -114,6 +114,21 @@ export const updateMyRaffleProfile = async (raffleId: string, profile: Participa
 export const getMyGiftee = async (raffleId: string): Promise<Giftee> => {
   const { data } = await api.get<Giftee>(`/raffles/${raffleId}/my-giftee`);
   return data;
+};
+
+// Exclusions
+export const getExclusions = async (raffleId: string): Promise<Exclusion[]> => {
+  const { data } = await api.get<Exclusion[]>(`/raffles/${raffleId}/exclusions`);
+  return data;
+};
+
+export const createExclusion = async (raffleId: string, exclusion: CreateExclusionRequest): Promise<Exclusion> => {
+  const { data } = await api.post<Exclusion>(`/raffles/${raffleId}/exclusions`, exclusion);
+  return data;
+};
+
+export const deleteExclusion = async (raffleId: string, exclusionId: string): Promise<void> => {
+  await api.delete(`/raffles/${raffleId}/exclusions/${exclusionId}`);
 };
 
 export default api;

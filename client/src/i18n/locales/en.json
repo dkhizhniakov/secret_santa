@@ -178,6 +178,20 @@
     "antiWishlistPlaceholder": "Allergies, what I definitely don't want...",
     "autoFilled": "Auto-filled"
   },
+  "exclusions": {
+    "title": "Exclusions",
+    "description": "Specify pairs of participants who should not give gifts to each other (e.g., family members or couples).",
+    "add": "Add",
+    "addDialogTitle": "Add Exclusion",
+    "addDialogInfo": "Select two participants. They will not be able to give gifts to each other.",
+    "participant1": "Participant 1",
+    "participant2": "Participant 2",
+    "noExclusions": "No exclusions yet",
+    "selectBothParticipants": "Select both participants",
+    "cannotExcludeSelf": "Cannot add exclusion for the same person",
+    "errorCreate": "Error creating exclusion",
+    "adding": "Adding..."
+  },
   "validation": {
     "required": "Required field",
     "minChars": "Minimum {{count}} characters",

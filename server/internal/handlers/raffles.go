@@ -38,11 +38,11 @@ type RaffleResponse struct {
 }
 
 type MemberResponse struct {
-	ID               string  `json:"id"`
-	UserID           string  `json:"userId"`
-	Name             string  `json:"name"`
-	AvatarURL        *string `json:"avatarUrl"`
-	IsProfileFilled  bool    `json:"isProfileFilled"`
+	ID              string  `json:"id"`
+	UserID          string  `json:"userId"`
+	Name            string  `json:"name"`
+	AvatarURL       *string `json:"avatarUrl"`
+	IsProfileFilled bool    `json:"isProfileFilled"`
 }
 
 // Профиль участника в розыгрыше (для обновления своего профиля)
@@ -270,7 +270,7 @@ func (h *Handler) JoinRaffle(c *gin.Context) {
 		GroupID: group.ID,
 		UserID:  uid,
 	}
-	
+
 	if err := h.db.Where("user_id = ?", uid).First(&userProfile).Error; err == nil {
 		// Копируем профиль в member
 		member.Phone = userProfile.Phone
@@ -340,7 +340,25 @@ func (h *Handler) DrawNames(c *gin.Context) {
 		}
 	}
 
-	// Perform draw (derangement - no one gets themselves)
+	// Load exclusions for this raffle
+	var exclusions []models.Exclusion
+	h.db.Where("group_id = ?", gid).Find(&exclusions)
+
+	// Build exclusion map (bidirectional)
+	exclusionMap := make(map[uuid.UUID]map[uuid.UUID]bool)
+	for _, excl := range exclusions {
+		if exclusionMap[excl.ParticipantA] == nil {
+			exclusionMap[excl.ParticipantA] = make(map[uuid.UUID]bool)
+		}
+		if exclusionMap[excl.ParticipantB] == nil {
+			exclusionMap[excl.ParticipantB] = make(map[uuid.UUID]bool)
+		}
+		// Bidirectional exclusion
+		exclusionMap[excl.ParticipantA][excl.ParticipantB] = true
+		exclusionMap[excl.ParticipantB][excl.ParticipantA] = true
+	}
+
+	// Perform draw (derangement - no one gets themselves or excluded pairs)
 	memberIDs := make([]uuid.UUID, len(group.Members))
 	memberMap := make(map[uuid.UUID]*models.Member)
 	for i, m := range group.Members {
@@ -348,14 +366,18 @@ func (h *Handler) DrawNames(c *gin.Context) {
 		memberMap[m.ID] = &group.Members[i]
 	}
 
-	assignments := derangement(memberIDs)
+	assignments := derangementWithExclusions(memberIDs, exclusionMap)
+	if assignments == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot find valid assignment with current exclusions. Try removing some exclusions."})
+		return
+	}
 
 	// Save assignments to members
 	for giverMemberID, gifteeMemberID := range assignments {
 		giver := memberMap[giverMemberID]
 		giver.GifteeID = &gifteeMemberID
 		h.db.Save(giver)
-		
+
 		// Also save to Assignment table for backward compatibility
 		assignment := models.Assignment{
 			GroupID:    gid,
@@ -401,11 +423,11 @@ func (h *Handler) GetMyAssignment(c *gin.Context) {
 // isProfileFilled проверяет, заполнен ли профиль участника
 func isProfileFilled(m models.Member) bool {
 	// Считаем профиль заполненным, если есть хотя бы одно из ключевых полей
-	hasAddress := m.AddressLine1 != nil && *m.AddressLine1 != "" && 
-	              m.City != nil && *m.City != "" && 
-	              m.Country != nil && *m.Country != ""
+	hasAddress := m.AddressLine1 != nil && *m.AddressLine1 != "" &&
+		m.City != nil && *m.City != "" &&
+		m.Country != nil && *m.Country != ""
 	hasWishlist := m.Wishlist != nil && *m.Wishlist != ""
-	
+
 	return hasAddress || hasWishlist
 }
 
@@ -566,6 +588,56 @@ func generateInviteCode() (string, error) {
 }
 
 // derangement creates a random derangement (permutation where no element appears in its original position)
+// derangementWithExclusions - creates a derangement considering exclusions
+// Returns nil if no valid assignment exists
+func derangementWithExclusions(ids []uuid.UUID, exclusions map[uuid.UUID]map[uuid.UUID]bool) map[uuid.UUID]uuid.UUID {
+	n := len(ids)
+	result := make(map[uuid.UUID]uuid.UUID)
+	maxAttempts := 10000 // Prevent infinite loop
+
+	// Fisher-Yates with rejection for derangement with exclusions
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		shuffled := make([]uuid.UUID, n)
+		copy(shuffled, ids)
+
+		// Shuffle
+		r := mathrand.New(mathrand.NewSource(time.Now().UnixNano() + cryptoRandInt64()))
+		for i := n - 1; i > 0; i-- {
+			j := r.Intn(i + 1)
+			shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+		}
+
+		// Check if it's a valid derangement with exclusions
+		isValid := true
+		for i := 0; i < n; i++ {
+			giver := ids[i]
+			receiver := shuffled[i]
+
+			// Cannot give to self
+			if giver == receiver {
+				isValid = false
+				break
+			}
+
+			// Cannot give to excluded participant
+			if exclusions[giver] != nil && exclusions[giver][receiver] {
+				isValid = false
+				break
+			}
+		}
+
+		if isValid {
+			for i := 0; i < n; i++ {
+				result[ids[i]] = shuffled[i]
+			}
+			return result
+		}
+	}
+
+	// No valid assignment found after max attempts
+	return nil
+}
+
 func derangement(ids []uuid.UUID) map[uuid.UUID]uuid.UUID {
 	n := len(ids)
 	result := make(map[uuid.UUID]uuid.UUID)

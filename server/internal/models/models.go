@@ -99,6 +99,19 @@ type Member struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// Exclusion - ограничение между участниками розыгрыша (кто не должен дарить кому)
+type Exclusion struct {
+	ID           uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"id"`
+	GroupID      uuid.UUID `gorm:"type:uuid;not null;index:idx_group_exclusion" json:"group_id"`
+	Group        Group     `gorm:"foreignKey:GroupID" json:"-"`
+	ParticipantA uuid.UUID `gorm:"type:uuid;not null" json:"participant_a_id"` // A не может дарить B
+	ParticipantB uuid.UUID `gorm:"type:uuid;not null" json:"participant_b_id"` // B не может дарить A (двусторонне)
+	MemberA      Member    `gorm:"foreignKey:ParticipantA" json:"-"`
+	MemberB      Member    `gorm:"foreignKey:ParticipantB" json:"-"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
 type Assignment struct {
 	ID         uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	GroupID    uuid.UUID `gorm:"type:uuid;not null"`

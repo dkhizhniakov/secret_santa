@@ -111,3 +111,26 @@ export interface Giftee {
   wishlist?: string | null;
   anti_wishlist?: string | null;
 }
+
+// Информация об участнике в исключении
+export interface ParticipantInfo {
+  id: string;
+  user_id: string;
+  name: string;
+  avatar_url?: string | null;
+}
+
+// Исключение (ограничение) между участниками
+export interface Exclusion {
+  id: string;
+  group_id: string;
+  participant_a: ParticipantInfo;
+  participant_b: ParticipantInfo;
+  created_at: string;
+}
+
+// Запрос на создание исключения
+export interface CreateExclusionRequest {
+  participant_a_id: string;
+  participant_b_id: string;
+}

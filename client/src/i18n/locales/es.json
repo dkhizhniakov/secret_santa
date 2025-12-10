@@ -178,12 +178,26 @@
     "antiWishlistPlaceholder": "Alergias, lo que definitivamente no quiero...",
     "autoFilled": "Autocompletado"
   },
+  "exclusions": {
+    "title": "Exclusiones",
+    "description": "Especifique parejas de participantes que no deben regalarse entre sí (por ejemplo, familiares o parejas).",
+    "add": "Añadir",
+    "addDialogTitle": "Añadir Exclusión",
+    "addDialogInfo": "Seleccione dos participantes. No podrán regalarse entre sí.",
+    "participant1": "Participante 1",
+    "participant2": "Participante 2",
+    "noExclusions": "Aún no hay exclusiones",
+    "selectBothParticipants": "Seleccione ambos participantes",
+    "cannotExcludeSelf": "No se puede añadir exclusión para la misma persona",
+    "errorCreate": "Error al crear la exclusión",
+    "adding": "Añadiendo..."
+  },
   "validation": {
-    "required": "Required field",
-    "minChars": "Minimum {{count}} characters",
-    "maxChars": "Maximum {{count}} characters",
-    "invalidPhone": "Invalid phone number format",
-    "minValue": "Minimum {{min}}",
-    "budgetMinMax": "Minimum cannot be greater than maximum"
+    "required": "Campo obligatorio",
+    "minChars": "Mínimo {{count}} caracteres",
+    "maxChars": "Máximo {{count}} caracteres",
+    "invalidPhone": "Formato de número de teléfono no válido",
+    "minValue": "Mínimo {{min}}",
+    "budgetMinMax": "El mínimo no puede ser mayor que el máximo"
   }
 }

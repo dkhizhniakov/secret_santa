@@ -115,10 +115,15 @@ func main() {
 			protected.POST("/raffles/:id/join", h.JoinRaffle)
 			protected.POST("/raffles/:id/draw", h.DrawNames)
 			protected.GET("/raffles/:id/my-assignment", h.GetMyAssignment)
-			
+
 			// Participant profile in raffle
 			protected.PUT("/raffles/:id/my-profile", h.UpdateMyProfile)
 			protected.GET("/raffles/:id/my-giftee", h.GetMyGiftee)
+
+			// Exclusions management (only for raffle owner)
+			protected.GET("/raffles/:id/exclusions", h.GetExclusions)
+			protected.POST("/raffles/:id/exclusions", h.CreateExclusion)
+			protected.DELETE("/raffles/:id/exclusions/:exclusionId", h.DeleteExclusion)
 		}
 	}
 

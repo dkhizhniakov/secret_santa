@@ -105,30 +105,32 @@ type Group struct {
   - Диалог заполнения профиля при вступлении в розыгрыш
   - Страница `/raffle/:id/giftee` с полной информацией о получателе (wishlist, адрес, телефон)
 
-### Фаза 3: Ограничения (Exclusions)
+### ✅ Фаза 3: Ограничения (Exclusions) - ЗАВЕРШЕНО
 
 **Цель**: Создатель может указать кто не должен дарить кому
 
-- [ ] Модель `Exclusion`
+- ✅ Модель `Exclusion`
 
   ```go
   type Exclusion struct {
-      RaffleID        uuid.UUID
-      ParticipantA_ID uuid.UUID  // A не дарит B
-      ParticipantB_ID uuid.UUID  // B не дарит A
-      Reason          string
+      ID            uuid.UUID
+      GroupID       uuid.UUID
+      ParticipantA  uuid.UUID  // A не дарит B (двустороннее)
+      ParticipantB  uuid.UUID  // B не дарит A (двустороннее)
+      MemberA       Member
+      MemberB       Member
   }
   ```
 
-- [ ] API эндпоинты:
+- ✅ API эндпоинты:
 
   - `GET /api/raffles/:id/exclusions`
   - `POST /api/raffles/:id/exclusions`
-  - `DELETE /api/raffles/:id/exclusions/:id`
+  - `DELETE /api/raffles/:id/exclusions/:exclusionId`
 
-- [ ] Обновить алгоритм жеребьевки с учётом ограничений
+- ✅ Обновлен алгоритм жеребьевки с учётом ограничений (`derangementWithExclusions`)
 
-- [ ] UI: страница управления ограничениями (матрица или список пар)
+- ✅ UI: компонент `ExclusionsManager` со списком пар и диалогом добавления
 
 ### Фаза 4: Анонимный чат
 
@@ -183,12 +185,12 @@ type Group struct {
 4. ✅ Страница `GifteePage` с wishlist/адресом получателя
 5. ✅ Обновлена жеребьевка для сохранения `GifteeID` в `Member`
 
-### Спринт 3: Ограничения (2-3 дня)
+### ✅ Спринт 3: Ограничения (ЗАВЕРШЕНО)
 
-1. Модель `Exclusion`
-2. UI управления ограничениями
-3. Обновить алгоритм жеребьевки
-4. Валидация (достаточно ли участников)
+1. ✅ Модель `Exclusion`
+2. ✅ UI управления ограничениями (компонент `ExclusionsManager`)
+3. ✅ Обновлен алгоритм жеребьевки с учетом исключений
+4. ✅ Валидация невозможности распределения при слишком большом количестве ограничений
 
 ### Спринт 4: Анонимный чат (4-5 дней)
 
