@@ -126,72 +126,89 @@ const Dashboard = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'flex-start', sm: 'center' }, 
+        mb: { xs: 3, sm: 4 },
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: { xs: 2, sm: 0 }
+      }}>
         <Box>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
+          <Typography variant="h4" fontWeight={700} gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
             🎄 {t("dashboard.title")}
           </Typography>
-          <Typography color="text.secondary">
+          <Typography color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
             {t("dashboard.subtitle")}
           </Typography>
         </Box>
         <Button
           variant="outlined"
-          startIcon={<LinkIcon />}
+          startIcon={<LinkIcon sx={{ display: { xs: 'none', sm: 'block' } }} />}
           onClick={() => setJoinDialogOpen(true)}
+          sx={{ minWidth: { sm: 140 }, width: { xs: '100%', sm: 'auto' } }}
         >
           {t("dashboard.join")}
         </Button>
       </Box>
 
       {isLoading ? (
-        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: { xs: 2, sm: 3 }, flexWrap: 'wrap' }}>
           {[1, 2, 3].map((i) => (
-            <Box key={i} sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+            <Box key={i} sx={{ flex: '1 1 100%', minWidth: { xs: '100%', sm: '280px', md: '300px' } }}>
               <Skeleton variant="rounded" height={200} />
             </Box>
           ))}
         </Box>
       ) : raffles.length === 0 ? (
-        <Card sx={{ textAlign: 'center', py: 8 }}>
+        <Card sx={{ textAlign: 'center', py: { xs: 6, sm: 8 } }}>
           <CardContent>
-            <Typography variant="h1" sx={{ fontSize: 64, mb: 2 }}>🎁</Typography>
-            <Typography variant="h5" gutterBottom>
+            <Typography variant="h1" sx={{ fontSize: { xs: 48, sm: 64 }, mb: 2 }}>🎁</Typography>
+            <Typography variant="h5" gutterBottom sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
               {t("dashboard.empty.title")}
             </Typography>
-            <Typography color="text.secondary" sx={{ mb: 3 }}>
+            <Typography color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
               {t("dashboard.empty.subtitle")}
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => navigate('/create')}
-              sx={{ mr: 2 }}
-            >
-              {t("dashboard.empty.create")}
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<LinkIcon />}
-              onClick={() => setJoinDialogOpen(true)}
-            >
-              {t("dashboard.join")}
-            </Button>
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 2, 
+              justifyContent: 'center',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: 'center'
+            }}>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => navigate('/create')}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                {t("dashboard.empty.create")}
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<LinkIcon />}
+                onClick={() => setJoinDialogOpen(true)}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                {t("dashboard.join")}
+              </Button>
+            </Box>
           </CardContent>
         </Card>
       ) : (
-        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: { xs: 2, sm: 3 }, flexWrap: 'wrap' }}>
           {raffles.map((raffle) => (
-            <Box key={raffle.id} sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+            <Box key={raffle.id} sx={{ flex: '1 1 100%', minWidth: { xs: '100%', sm: '280px', md: '300px' } }}>
               <Card>
                 <CardActionArea onClick={() => navigate(`/raffle/${raffle.id}`)}>
                   <CardContent>
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-                      <Avatar src={raffle.avatarUrl || undefined} sx={{ width: 48, height: 48 }}>
+                      <Avatar src={raffle.avatarUrl || undefined} sx={{ width: { xs: 40, sm: 48 }, height: { xs: 40, sm: 48 } }}>
                         🎅
                       </Avatar>
                       <Box sx={{ flex: 1 }}>
-                        <Typography variant="h6" fontWeight={700}>
+                        <Typography variant="h6" fontWeight={700} sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                           {raffle.name}
                         </Typography>
                         {raffle.isDrawn ? (
@@ -227,17 +244,17 @@ const Dashboard = () => {
                       </Typography>
                     )}
 
-                    <Box sx={{ display: 'flex', gap: 2, color: 'text.secondary' }}>
+                    <Box sx={{ display: 'flex', gap: { xs: 1.5, sm: 2 }, color: 'text.secondary', flexWrap: 'wrap' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <GroupIcon fontSize="small" />
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                           {raffle.members.length} {t("common.participants")}
                         </Typography>
                       </Box>
                       {raffle.eventDate && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <CalendarMonth fontSize="small" />
-                          <Typography variant="body2">
+                          <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                             {formatDate(raffle.eventDate)}
                           </Typography>
                         </Box>
@@ -268,8 +285,18 @@ const Dashboard = () => {
       )}
 
       {/* Join Dialog */}
-      <Dialog open={joinDialogOpen} onClose={() => setJoinDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>{t("dashboard.joinDialog.title")}</DialogTitle>
+      <Dialog 
+        open={joinDialogOpen} 
+        onClose={() => setJoinDialogOpen(false)} 
+        maxWidth="xs" 
+        fullWidth
+        PaperProps={{
+          sx: { m: { xs: 2, sm: 3 }, width: { xs: 'calc(100% - 32px)', sm: '100%' } }
+        }}
+      >
+        <DialogTitle sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
+          {t("dashboard.joinDialog.title")}
+        </DialogTitle>
         <DialogContent>
           {joinRaffleMutation.isError && (
             <Alert severity="error" sx={{ mb: 2 }}>

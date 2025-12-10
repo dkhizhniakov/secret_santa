@@ -68,34 +68,41 @@ const GifteePage = () => {
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate(`/raffle/${id}`)}
-        sx={{ mb: 3 }}
+        sx={{ mb: { xs: 2, sm: 3 } }}
       >
         {t("common.back")}
       </Button>
 
-      <Typography variant="h4" fontWeight={700} gutterBottom>
+      <Typography variant="h4" fontWeight={700} gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
         🎁 {t("giftee.title")}
       </Typography>
-      <Typography color="text.secondary" sx={{ mb: 4 }}>
+      <Typography color="text.secondary" sx={{ mb: { xs: 3, sm: 4 }, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
         {t("giftee.subtitle")}
       </Typography>
 
       {/* Основная информация */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 3, mb: 3 }}>
+      <Card sx={{ mb: { xs: 2, sm: 3 } }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+          <Box sx={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: { xs: 2, sm: 3 }, 
+            mb: { xs: 2, sm: 3 },
+            flexDirection: { xs: 'column', sm: 'row' },
+            textAlign: { xs: 'center', sm: 'left' }
+          }}>
             <Avatar
               src={giftee.avatarUrl || undefined}
-              sx={{ width: 80, height: 80 }}
+              sx={{ width: { xs: 64, sm: 80 }, height: { xs: 64, sm: 80 } }}
             >
               {giftee.name[0]}
             </Avatar>
-            <Box>
-              <Typography variant="h5" fontWeight={700}>
+            <Box sx={{ width: { xs: '100%', sm: 'auto' } }}>
+              <Typography variant="h5" fontWeight={700} sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                 {giftee.name}
               </Typography>
               {giftee.about && (
-                <Typography color="text.secondary" sx={{ mt: 1 }}>
+                <Typography color="text.secondary" sx={{ mt: 1, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                   {giftee.about}
                 </Typography>
               )}
@@ -136,11 +143,11 @@ const GifteePage = () => {
 
       {/* Контактная информация */}
       <Card>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h6" fontWeight={600} gutterBottom>
+        <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+          <Typography variant="h6" fontWeight={600} gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             {t("giftee.contactInfo")}
           </Typography>
-          <Alert severity="info" sx={{ mb: 3 }}>
+          <Alert severity="info" sx={{ mb: { xs: 2, sm: 3 } }}>
             {t("giftee.privacyNotice")}
           </Alert>
 

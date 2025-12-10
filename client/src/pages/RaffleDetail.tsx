@@ -174,7 +174,7 @@ const RaffleDetail = () => {
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate('/')}
-        sx={{ mb: 3 }}
+        sx={{ mb: { xs: 2, sm: 3 } }}
       >
         {t('common.back')}
       </Button>
@@ -192,18 +192,30 @@ const RaffleDetail = () => {
       )}
 
       {/* Main Info */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', mb: 3 }}>
+      <Card sx={{ mb: { xs: 2, sm: 3 } }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: { xs: 2, sm: 3 }, 
+            alignItems: 'flex-start', 
+            mb: { xs: 2, sm: 3 },
+            flexDirection: { xs: 'column', sm: 'row' }
+          }}>
             <Avatar 
               src={raffle.avatarUrl || undefined}
-              sx={{ width: 80, height: 80 }}
+              sx={{ width: { xs: 64, sm: 80 }, height: { xs: 64, sm: 80 } }}
             >
               🎅
             </Avatar>
-            <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                <Typography variant="h4" fontWeight={700} gutterBottom>
+            <Box sx={{ flex: 1, width: { xs: '100%', sm: 'auto' } }}>
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'start',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 1
+              }}>
+                <Typography variant="h4" fontWeight={700} gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {raffle.name}
                 </Typography>
                 {raffle.isDrawn ? (
@@ -211,32 +223,39 @@ const RaffleDetail = () => {
                     icon={<CardGiftcard />}
                     label={t('dashboard.status.drawn')}
                     color="success"
+                    size="small"
                   />
                 ) : (
                   <Chip
                     label={t('dashboard.status.pending')}
                     color="warning"
+                    size="small"
                   />
                 )}
               </Box>
 
               {raffle.description && (
-                <Typography color="text.secondary" paragraph>
+                <Typography color="text.secondary" paragraph sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                   {raffle.description}
                 </Typography>
               )}
 
-              <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: { xs: 2, sm: 3 }, 
+                mb: 2,
+                flexDirection: { xs: 'column', sm: 'row' }
+              }}>
                 {raffle.eventDate && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CalendarMonth color="action" />
-                    <Typography>
+                    <CalendarMonth color="action" fontSize="small" />
+                    <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                       <strong>{t('raffleDetail.eventDate')}:</strong> {formatDate(raffle.eventDate)}
                     </Typography>
                   </Box>
                 )}
                 {raffle.budget && (
-                  <Typography>
+                  <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                     <strong>{t('raffleDetail.budget')}:</strong> {raffle.budget}
                   </Typography>
                 )}
@@ -271,38 +290,51 @@ const RaffleDetail = () => {
                       )}
                     </Alert>
                   )}
-                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: { xs: 1, sm: 2 }, 
+                    flexWrap: 'wrap', 
+                    mt: 2,
+                    '& > button': {
+                      flex: { xs: '1 1 calc(50% - 4px)', sm: '0 1 auto' },
+                      minWidth: { xs: 0, sm: 'auto' }
+                    }
+                  }}>
                     <Button
                       variant="contained"
-                      startIcon={<Shuffle />}
+                      startIcon={<Shuffle sx={{ display: { xs: 'none', sm: 'block' } }} />}
                       onClick={() => drawMutation.mutate()}
                       disabled={
                         raffle.members.length < 3 || 
                         drawMutation.isPending || 
                         !raffle.members.every(m => m.isProfileFilled)
                       }
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                     >
                       {drawMutation.isPending ? t('raffleDetail.drawing') : t('raffleDetail.drawButton')}
                     </Button>
                     <Button
                       variant="outlined"
-                      startIcon={<ContentCopy />}
+                      startIcon={<ContentCopy sx={{ display: { xs: 'none', sm: 'block' } }} />}
                       onClick={handleCopyInviteCode}
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                     >
                       {t('raffleDetail.copyCode')}
                     </Button>
                     <Button
                       variant="outlined"
-                      startIcon={<ContentCopy />}
+                      startIcon={<ContentCopy sx={{ display: { xs: 'none', sm: 'block' } }} />}
                       onClick={handleCopyInviteLink}
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                     >
                       {t('raffleDetail.copyLink')}
                     </Button>
                     <Button
                       variant="outlined"
                       color="error"
-                      startIcon={<Delete />}
+                      startIcon={<Delete sx={{ display: { xs: 'none', sm: 'block' } }} />}
                       onClick={() => setDeleteDialogOpen(true)}
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                     >
                       {t('raffleDetail.deleteButton')}
                     </Button>
@@ -342,12 +374,12 @@ const RaffleDetail = () => {
 
       {/* Assignment */}
       {raffle.isDrawn && assignment && (
-        <Card sx={{ mb: 3, bgcolor: 'primary.main', color: 'white' }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
+        <Card sx={{ mb: { xs: 2, sm: 3 }, bgcolor: 'primary.main', color: 'white' }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
               🎁 {t('raffleDetail.yourGiftee')}:
             </Typography>
-            <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
+            <Typography variant="h4" fontWeight={700} sx={{ mb: 2, fontSize: { xs: '1.75rem', sm: '2rem' } }}>
               {assignment.receiverName}
             </Typography>
             <Button
@@ -364,22 +396,27 @@ const RaffleDetail = () => {
 
       {/* Members */}
       <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             {t('raffleDetail.participants')} ({raffle.members.length})
           </Typography>
-          <List>
+          <List sx={{ p: 0 }}>
             {raffle.members.map((member) => (
-              <ListItem key={member.id}>
+              <ListItem key={member.id} sx={{ px: { xs: 0, sm: 2 } }}>
                 <ListItemAvatar>
-                  <Avatar src={member.avatarUrl || undefined}>
+                  <Avatar 
+                    src={member.avatarUrl || undefined}
+                    sx={{ width: { xs: 32, sm: 40 }, height: { xs: 32, sm: 40 } }}
+                  >
                     {member.name[0]}
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
                   primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {member.name}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                      <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                        {member.name}
+                      </Typography>
                       {member.isProfileFilled ? (
                         <CheckCircle fontSize="small" sx={{ color: 'success.main' }} />
                       ) : (
@@ -388,20 +425,28 @@ const RaffleDetail = () => {
                     </Box>
                   }
                   secondary={member.userId === raffle.ownerId ? t('raffleDetail.organizer') : ''}
+                  secondaryTypographyProps={{ sx: { fontSize: { xs: '0.75rem', sm: '0.875rem' } } }}
                 />
               </ListItem>
             ))}
           </List>
-          <Box sx={{ display: 'flex', gap: 2, mt: 2, px: 2, pb: 1 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: { xs: 1.5, sm: 2 }, 
+            mt: 2, 
+            px: { xs: 0, sm: 2 }, 
+            pb: 1,
+            flexDirection: { xs: 'column', sm: 'row' }
+          }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <CheckCircle fontSize="small" sx={{ color: 'success.main' }} />
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                 {t('raffleDetail.profileFilled')}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Warning fontSize="small" sx={{ color: 'warning.main' }} />
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                 {t('raffleDetail.profileNotFilled')}
               </Typography>
             </Box>

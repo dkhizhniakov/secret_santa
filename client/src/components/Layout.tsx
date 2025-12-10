@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   AppBar,
@@ -39,31 +39,70 @@ const Layout: React.FC = () => {
   return (
     <Box sx={{ minHeight: '100vh', background: 'linear-gradient(180deg, #faf9f6 0%, #f0ebe3 100%)' }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
-        <Toolbar>
-          <CardGiftcard sx={{ mr: 1, color: 'primary.main' }} />
+        <Toolbar sx={{ minHeight: { xs: 56, sm: 64 }, px: { xs: 1, sm: 2 } }}>
+          <IconButton 
+            component={Link} 
+            to="/"
+            sx={{ 
+              mr: { xs: 0.5, sm: 1 }, 
+              color: 'primary.main',
+              p: 0.5
+            }}
+          >
+            <CardGiftcard sx={{ fontSize: { xs: 20, sm: 24 } }} />
+          </IconButton>
+          
           <Typography
+            component={Link}
+            to="/"
             variant="h6"
-            sx={{ flexGrow: 1, cursor: 'pointer', fontWeight: 700 }}
-            onClick={() => navigate('/')}
+            sx={{ 
+              flexGrow: 1, 
+              fontWeight: 700,
+              fontSize: { xs: '1rem', sm: '1.25rem' },
+              display: { xs: 'none', sm: 'block' },
+              textDecoration: 'none',
+              color: 'inherit',
+              '&:hover': {
+                opacity: 0.8
+              }
+            }}
           >
             {t('app.name')}
           </Typography>
           
+          {/* Пустое пространство для мобильных */}
+          <Box 
+            sx={{ 
+              flexGrow: 1, 
+              display: { xs: 'block', sm: 'none' } 
+            }}
+          />
+          
+          {/* Кнопка создания - на мобильных только иконка */}
           <Button
-            startIcon={<Add />}
+            component={Link}
+            to="/create"
+            startIcon={<Add sx={{ display: { xs: 'none', sm: 'block' } }} />}
             variant="contained"
-            onClick={() => navigate('/create')}
-            sx={{ mr: 2 }}
+            sx={{ 
+              mr: { xs: 0.5, sm: 2 },
+              minWidth: { xs: 40, sm: 'auto' },
+              px: { xs: 1, sm: 2 },
+            }}
           >
-            {t('nav.createRaffle')}
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+              {t('nav.createRaffle')}
+            </Box>
+            <Add sx={{ display: { xs: 'block', sm: 'none' } }} />
           </Button>
 
           <LanguageSwitcher />
 
-          <IconButton onClick={handleMenu}>
+          <IconButton onClick={handleMenu} sx={{ ml: { xs: 0.5, sm: 1 } }}>
             <Avatar 
               src={user?.avatar_url || undefined}
-              sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}
+              sx={{ bgcolor: 'primary.main', width: { xs: 32, sm: 36 }, height: { xs: 32, sm: 36 } }}
             >
               {user?.name?.[0]?.toUpperCase()}
             </Avatar>
@@ -90,7 +129,7 @@ const Layout: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
         <Outlet />
       </Container>
     </Box>

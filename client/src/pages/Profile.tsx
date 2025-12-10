@@ -352,13 +352,13 @@ export default function Profile() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+    <Container maxWidth="md" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
+      <Paper sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 3, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
           👤 {t("profile.title")}
         </Typography>
 
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
           {t("profile.subtitle")}
         </Typography>
 
@@ -558,8 +558,8 @@ export default function Profile() {
             </Box>
 
             {/* Адрес строка 1 */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: "1 1 45%", minWidth: "250px" }}>
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", flexDirection: { xs: 'column', sm: 'row' } }}>
+              <Box sx={{ flex: "1 1 100%", minWidth: { xs: '100%', sm: '250px' } }}>
                 <TextField
                   label={t("profile.addressLine1")}
                   placeholder={t("profile.addressLine1Placeholder")}
@@ -574,7 +574,7 @@ export default function Profile() {
                 />
               </Box>
 
-              <Box sx={{ flex: "1 1 45%", minWidth: "250px" }}>
+              <Box sx={{ flex: "1 1 100%", minWidth: { xs: '100%', sm: '250px' } }}>
                 <TextField
                   label={t("profile.addressLine1En")}
                   placeholder={t("profile.addressLine1EnPlaceholder")}
@@ -602,8 +602,8 @@ export default function Profile() {
             </Box>
 
             {/* Адрес строка 2 */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: "1 1 45%", minWidth: "250px" }}>
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", flexDirection: { xs: 'column', sm: 'row' } }}>
+              <Box sx={{ flex: "1 1 100%", minWidth: { xs: '100%', sm: '250px' } }}>
                 <TextField
                   label={t("profile.addressLine2")}
                   placeholder={t("profile.addressLine2Placeholder")}
@@ -618,7 +618,7 @@ export default function Profile() {
                 />
               </Box>
 
-              <Box sx={{ flex: "1 1 45%", minWidth: "250px" }}>
+              <Box sx={{ flex: "1 1 100%", minWidth: { xs: '100%', sm: '250px' } }}>
                 <TextField
                   label={t("profile.addressLine2En")}
                   placeholder={t("profile.addressLine2EnPlaceholder")}
@@ -646,8 +646,8 @@ export default function Profile() {
             </Box>
 
             {/* Город */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: "1 1 45%", minWidth: "250px" }}>
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", flexDirection: { xs: 'column', sm: 'row' } }}>
+              <Box sx={{ flex: "1 1 100%", minWidth: { xs: '100%', sm: '250px' } }}>
                 <TextField
                   label={t("profile.city")}
                   placeholder={t("profile.cityPlaceholder")}
@@ -659,7 +659,7 @@ export default function Profile() {
                 />
               </Box>
 
-              <Box sx={{ flex: "1 1 45%", minWidth: "250px" }}>
+              <Box sx={{ flex: "1 1 100%", minWidth: { xs: '100%', sm: '250px' } }}>
                 <TextField
                   label={t("profile.cityEn")}
                   placeholder={t("profile.cityEnPlaceholder")}
@@ -685,8 +685,8 @@ export default function Profile() {
             </Box>
 
             {/* Регион/Область */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: "1 1 45%", minWidth: "250px" }}>
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", flexDirection: { xs: 'column', sm: 'row' } }}>
+              <Box sx={{ flex: "1 1 100%", minWidth: { xs: '100%', sm: '250px' } }}>
                 <TextField
                    label={t("profile.region")}
                    placeholder={t("profile.regionPlaceholder")}
@@ -698,7 +698,7 @@ export default function Profile() {
                 />
               </Box>
 
-              <Box sx={{ flex: "1 1 45%", minWidth: "250px" }}>
+              <Box sx={{ flex: "1 1 100%", minWidth: { xs: '100%', sm: '250px' } }}>
                 <TextField
                   label={t("profile.regionEn")}
                   placeholder={t("profile.regionEnPlaceholder")}
@@ -724,21 +724,17 @@ export default function Profile() {
             </Box>
 
             {/* Почтовый индекс */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: "1 1 45%", minWidth: "250px" }}>
-                <TextField
-                  label={t("profile.postalCode")}
-                  placeholder={t("profile.postalCodePlaceholder")}
-                  fullWidth
-                  {...register("postal_code")}
-                  error={!!errors.postal_code}
-                  helperText={errors.postal_code?.message}
-                />
-              </Box>
-            </Box>
+            <TextField
+              label={t("profile.postalCode")}
+              placeholder={t("profile.postalCodePlaceholder")}
+              fullWidth
+              {...register("postal_code")}
+              error={!!errors.postal_code}
+              helperText={errors.postal_code?.message}
+            />
 
-            <Divider sx={{ my: 2 }}>
-              <Typography variant="h6" color="text.secondary">
+            <Divider sx={{ my: { xs: 2, sm: 3 } }}>
+              <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 🎁 {t("profile.wishlistSection")}
               </Typography>
             </Divider>
@@ -768,11 +764,17 @@ export default function Profile() {
             />
 
             {/* Кнопки */}
-            <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
+            <Box sx={{ 
+              display: "flex", 
+              gap: 2, 
+              justifyContent: { xs: 'stretch', sm: 'flex-end' },
+              flexDirection: { xs: 'column', sm: 'row' }
+            }}>
               <Button
                 variant="outlined"
                 onClick={() => navigate("/")}
                 disabled={mutation.isPending}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
                 {t("profile.cancel")}
               </Button>
@@ -787,6 +789,7 @@ export default function Profile() {
                   )
                 }
                 disabled={mutation.isPending || !isDirty}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
                 {t("profile.save")}
               </Button>

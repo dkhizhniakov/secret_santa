@@ -205,17 +205,17 @@ const CreateRaffle = () => {
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate("/")}
-        sx={{ mb: 3 }}
+        sx={{ mb: { xs: 2, sm: 3 } }}
       >
         {t("common.back")}
       </Button>
 
       <Card sx={{ maxWidth: 600, mx: "auto" }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
+        <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+          <Typography variant="h4" fontWeight={700} gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
             🎁 {t("createRaffle.title")}
           </Typography>
-          <Typography color="text.secondary" sx={{ mb: 4 }}>
+          <Typography color="text.secondary" sx={{ mb: { xs: 3, sm: 4 }, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
             {t("createRaffle.subtitle")}
           </Typography>
 
@@ -227,14 +227,20 @@ const CreateRaffle = () => {
 
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Аватар */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+            <Box sx={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: { xs: 1.5, sm: 2 }, 
+              mb: { xs: 2, sm: 3 },
+              flexDirection: { xs: 'column', sm: 'row' }
+            }}>
               <Avatar
                 src={avatarPreview || undefined}
-                sx={{ width: 80, height: 80 }}
+                sx={{ width: { xs: 64, sm: 80 }, height: { xs: 64, sm: 80 } }}
               >
                 🎅
               </Avatar>
-              <Box>
+              <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
                 <input
                   accept="image/*"
                   style={{ display: "none" }}
@@ -301,11 +307,16 @@ const CreateRaffle = () => {
               )}
             />
 
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+            <Typography variant="h6" fontWeight={600} sx={{ mb: 2, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
               {t("createRaffle.budgetSection")}
             </Typography>
 
-            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+            <Box sx={{ 
+              display: "flex", 
+              gap: 2, 
+              mb: 3,
+              flexDirection: { xs: 'column', sm: 'row' }
+            }}>
               <Controller
                 name="budgetMin"
                 control={control}
@@ -356,7 +367,7 @@ const CreateRaffle = () => {
                     label={t("createRaffle.currency")}
                     error={!!errors.currency}
                     helperText={errors.currency?.message}
-                    sx={{ minWidth: 120 }}
+                    sx={{ minWidth: { xs: '100%', sm: 120 }, width: { xs: '100%', sm: 'auto' } }}
                   >
                     <MenuItem value="RUB">₽ RUB</MenuItem>
                     <MenuItem value="USD">$ USD</MenuItem>

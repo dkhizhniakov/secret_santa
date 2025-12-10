@@ -165,11 +165,26 @@ export const ParticipantProfileDialog = ({
   ];
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{t("participantProfile.title")}</DialogTitle>
-      <DialogContent>
-        <Alert severity="info" sx={{ mb: 3, mt: 1 }}>
-          <Typography variant="body2">
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="md" 
+      fullWidth
+      fullScreen={false}
+      PaperProps={{
+        sx: { 
+          m: { xs: 2, sm: 3 }, 
+          width: { xs: 'calc(100% - 32px)', sm: '100%' },
+          maxHeight: { xs: 'calc(100% - 32px)', sm: '90vh' }
+        }
+      }}
+    >
+      <DialogTitle sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' }, px: { xs: 2, sm: 3 } }}>
+        {t("participantProfile.title")}
+      </DialogTitle>
+      <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
+        <Alert severity="info" sx={{ mb: { xs: 2, sm: 3 }, mt: 1 }}>
+          <Typography variant="body2" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
             {isOrganizer 
               ? t("participantProfile.organizerSubtitle")
               : t("participantProfile.subtitle")
@@ -254,11 +269,11 @@ export const ParticipantProfileDialog = ({
             />
 
             {/* Адрес */}
-            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+            <Typography variant="h6" sx={{ mt: { xs: 1, sm: 2 }, mb: 1, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
               📦 {t("profile.addressSection")}
             </Typography>
 
-            <Alert severity="info" sx={{ mb: 2 }}>
+            <Alert severity="info" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
               {t("profile.addressAutoInfo")}
             </Alert>
 
@@ -521,7 +536,7 @@ export const ParticipantProfileDialog = ({
             />
 
             {/* Wishlist */}
-            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+            <Typography variant="h6" sx={{ mt: { xs: 1, sm: 2 }, mb: 1, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
               🎁 {t("profile.wishlistSection")}
             </Typography>
 
@@ -559,14 +574,24 @@ export const ParticipantProfileDialog = ({
           </Box>
         </form>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isSubmitting}>
+      <DialogActions sx={{ 
+        px: { xs: 2, sm: 3 }, 
+        py: { xs: 1.5, sm: 2 },
+        flexDirection: { xs: 'column-reverse', sm: 'row' },
+        gap: { xs: 1, sm: 0 }
+      }}>
+        <Button 
+          onClick={onClose} 
+          disabled={isSubmitting}
+          sx={{ width: { xs: '100%', sm: 'auto' } }}
+        >
           {t("participantProfile.skip")}
         </Button>
         <Button
           variant="contained"
           onClick={handleSubmit(handleFormSubmit)}
           disabled={isSubmitting}
+          sx={{ width: { xs: '100%', sm: 'auto' } }}
         >
           {isSubmitting ? t("common.save") + "..." : t("common.save")}
         </Button>
