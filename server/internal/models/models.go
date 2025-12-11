@@ -93,7 +93,6 @@ type Member struct {
 
 	// Кому дарит (заполняется после жеребьевки)
 	GifteeID *uuid.UUID `gorm:"type:uuid" json:"giftee_id"`
-	Giftee   *Member    `gorm:"foreignKey:GifteeID" json:"-"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -120,4 +119,17 @@ type Assignment struct {
 	Giver      User      `gorm:"foreignKey:GiverID"`
 	Receiver   User      `gorm:"foreignKey:ReceiverID"`
 	CreatedAt  time.Time
+}
+
+// Message - сообщение в анонимном чате между дарителем и получателем
+type Message struct {
+	ID        uuid.UUID  `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"id"`
+	GroupID   uuid.UUID  `gorm:"type:uuid;not null;index:idx_group_chat" json:"group_id"`
+	SantaID   uuid.UUID  `gorm:"type:uuid;not null;index:idx_santa_chat" json:"santa_id"`   // Member ID дарителя
+	GifteeID  uuid.UUID  `gorm:"type:uuid;not null;index:idx_giftee_chat" json:"giftee_id"` // Member ID получателя
+	FromSanta bool       `gorm:"not null" json:"from_santa"` // true = от дарителя, false = от получателя
+	Content   string     `gorm:"type:text;not null" json:"content"`
+	ReadAt    *time.Time `json:"read_at"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
 }

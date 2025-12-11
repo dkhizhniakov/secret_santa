@@ -104,6 +104,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ steps.config.outputs.aws_region }}
           S3_BUCKET: ${{ steps.config.outputs.s3_bucket }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
         run: |
           printf '%s\n' \
             "PORT=8080" \
@@ -124,6 +125,7 @@ jobs:
             "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" \
             "AWS_REGION=${AWS_REGION}" \
             "S3_BUCKET=${S3_BUCKET}" \
+            "ENCRYPTION_KEY=${ENCRYPTION_KEY}" \
             > .env
 
       - name: Upload files to EC2

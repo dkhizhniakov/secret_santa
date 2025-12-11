@@ -131,4 +131,30 @@ export const deleteExclusion = async (raffleId: string, exclusionId: string): Pr
   await api.delete(`/raffles/${raffleId}/exclusions/${exclusionId}`);
 };
 
+// Chat
+export interface ChatMessage {
+  id: string;
+  santa_id: string;
+  giftee_id: string;
+  from_santa: boolean;
+  content: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+export const getChatWithGiftee = async (raffleId: string): Promise<ChatMessage[]> => {
+  const { data } = await api.get<ChatMessage[]>(`/raffles/${raffleId}/chat/giftee`);
+  return data;
+};
+
+export const getChatWithSanta = async (raffleId: string): Promise<ChatMessage[]> => {
+  const { data } = await api.get<ChatMessage[]>(`/raffles/${raffleId}/chat/santa`);
+  return data;
+};
+
+export const getUnreadCount = async (raffleId: string): Promise<{ unread_from_giftee: number; unread_from_santa: number; total: number }> => {
+  const { data } = await api.get(`/raffles/${raffleId}/chat/unread`);
+  return data;
+};
+
 export default api;

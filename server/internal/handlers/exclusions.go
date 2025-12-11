@@ -44,7 +44,7 @@ func (h *Handler) GetExclusions(c *gin.Context) {
 
 	// Проверяем, что пользователь - создатель розыгрыша
 	var group models.Group
-	if err := h.db.Where("id = ?", rid).First(&group).Error; err != nil {
+	if err := h.DB.Where("id = ?", rid).First(&group).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Raffle not found"})
 		return
 	}
@@ -56,7 +56,7 @@ func (h *Handler) GetExclusions(c *gin.Context) {
 
 	// Получаем все исключения
 	var exclusions []models.Exclusion
-	if err := h.db.Where("group_id = ?", rid).
+	if err := h.DB.Where("group_id = ?", rid).
 		Preload("MemberA").
 		Preload("MemberA.User").
 		Preload("MemberB").
@@ -104,7 +104,7 @@ func (h *Handler) CreateExclusion(c *gin.Context) {
 
 	// Проверяем, что пользователь - создатель розыгрыша
 	var group models.Group
-	if err := h.db.Where("id = ?", rid).First(&group).Error; err != nil {
+	if err := h.DB.Where("id = ?", rid).First(&group).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Raffle not found"})
 		return
 	}
@@ -134,8 +134,8 @@ func (h *Handler) CreateExclusion(c *gin.Context) {
 
 	// Проверяем, что оба участника есть в розыгрыше
 	var countA, countB int64
-	h.db.Model(&models.Member{}).Where("id = ? AND group_id = ?", req.ParticipantA, rid).Count(&countA)
-	h.db.Model(&models.Member{}).Where("id = ? AND group_id = ?", req.ParticipantB, rid).Count(&countB)
+	h.DB.Model(&models.Member{}).Where("id = ? AND group_id = ?", req.ParticipantA, rid).Count(&countA)
+	h.DB.Model(&models.Member{}).Where("id = ? AND group_id = ?", req.ParticipantB, rid).Count(&countB)
 
 	if countA == 0 || countB == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "One or both participants not found in this raffle"})
@@ -144,7 +144,7 @@ func (h *Handler) CreateExclusion(c *gin.Context) {
 
 	// Проверяем, что такое исключение еще не существует
 	var existingCount int64
-	h.db.Model(&models.Exclusion{}).Where(
+	h.DB.Model(&models.Exclusion{}).Where(
 		"group_id = ? AND ((participant_a = ? AND participant_b = ?) OR (participant_a = ? AND participant_b = ?))",
 		rid, req.ParticipantA, req.ParticipantB, req.ParticipantB, req.ParticipantA,
 	).Count(&existingCount)
@@ -161,13 +161,13 @@ func (h *Handler) CreateExclusion(c *gin.Context) {
 		ParticipantB: req.ParticipantB,
 	}
 
-	if err := h.db.Create(&exclusion).Error; err != nil {
+	if err := h.DB.Create(&exclusion).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create exclusion"})
 		return
 	}
 
 	// Загружаем полные данные для ответа
-	h.db.Preload("MemberA").Preload("MemberA.User").Preload("MemberB").Preload("MemberB.User").First(&exclusion, exclusion.ID)
+	h.DB.Preload("MemberA").Preload("MemberA.User").Preload("MemberB").Preload("MemberB.User").First(&exclusion, exclusion.ID)
 
 	response := ExclusionResponse{
 		ID:      exclusion.ID,
@@ -210,7 +210,7 @@ func (h *Handler) DeleteExclusion(c *gin.Context) {
 
 	// Проверяем, что пользователь - создатель розыгрыша
 	var group models.Group
-	if err := h.db.Where("id = ?", rid).First(&group).Error; err != nil {
+	if err := h.DB.Where("id = ?", rid).First(&group).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Raffle not found"})
 		return
 	}
@@ -227,7 +227,7 @@ func (h *Handler) DeleteExclusion(c *gin.Context) {
 	}
 
 	// Удаляем исключение
-	result := h.db.Where("id = ? AND group_id = ?", eid, rid).Delete(&models.Exclusion{})
+	result := h.DB.Where("id = ? AND group_id = ?", eid, rid).Delete(&models.Exclusion{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete exclusion"})
 		return

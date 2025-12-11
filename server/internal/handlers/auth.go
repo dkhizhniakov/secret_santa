@@ -156,14 +156,14 @@ func (h *Handler) findOrCreateGoogleUser(googleUser GoogleUserInfo) (*models.Use
 	var user models.User
 
 	// Ищем по GoogleID
-	err := h.db.Where("google_id = ?", googleUser.ID).First(&user).Error
+	err := h.DB.Where("google_id = ?", googleUser.ID).First(&user).Error
 	if err == nil {
 		// Обновляем данные
 		user.Name = googleUser.Name
 		if googleUser.Picture != "" {
 			user.AvatarURL = &googleUser.Picture
 		}
-		h.db.Save(&user)
+		h.DB.Save(&user)
 		return &user, nil
 	}
 
@@ -173,7 +173,7 @@ func (h *Handler) findOrCreateGoogleUser(googleUser GoogleUserInfo) (*models.Use
 		Name:      googleUser.Name,
 		AvatarURL: &googleUser.Picture,
 	}
-	if err := h.db.Create(&user).Error; err != nil {
+	if err := h.DB.Create(&user).Error; err != nil {
 		return nil, err
 	}
 
@@ -273,7 +273,7 @@ func (h *Handler) findOrCreateTelegramUser(data TelegramAuthData) (*models.User,
 	var user models.User
 
 	// Ищем по TelegramID
-	err := h.db.Where("telegram_id = ?", data.ID).First(&user).Error
+	err := h.DB.Where("telegram_id = ?", data.ID).First(&user).Error
 	if err == nil {
 		// Обновляем данные
 		name := data.FirstName
@@ -284,7 +284,7 @@ func (h *Handler) findOrCreateTelegramUser(data TelegramAuthData) (*models.User,
 		if data.PhotoURL != "" {
 			user.AvatarURL = &data.PhotoURL
 		}
-		h.db.Save(&user)
+		h.DB.Save(&user)
 		return &user, nil
 	}
 
@@ -302,7 +302,7 @@ func (h *Handler) findOrCreateTelegramUser(data TelegramAuthData) (*models.User,
 		user.AvatarURL = &data.PhotoURL
 	}
 
-	if err := h.db.Create(&user).Error; err != nil {
+	if err := h.DB.Create(&user).Error; err != nil {
 		return nil, err
 	}
 
@@ -322,7 +322,7 @@ func (h *Handler) Me(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := h.db.First(&user, uid).Error; err != nil {
+	if err := h.DB.First(&user, uid).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"secret-santa/internal/models"
+	"secret-santa/internal/validator"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -11,50 +12,50 @@ import (
 
 // ProfileRequest - структура для обновления профиля
 type ProfileRequest struct {
-	Phone          *string `json:"phone"`
-	About          *string `json:"about"`
-	
+	Phone *string `json:"phone"`
+	About *string `json:"about"`
+
 	// Адрес на местном языке
-	AddressLine1   *string `json:"address_line1"`
-	AddressLine2   *string `json:"address_line2"`
-	City           *string `json:"city"`
-	Region         *string `json:"region"`
-	PostalCode     *string `json:"postal_code"`
-	Country        *string `json:"country"`
-	
+	AddressLine1 *string `json:"address_line1"`
+	AddressLine2 *string `json:"address_line2"`
+	City         *string `json:"city"`
+	Region       *string `json:"region"`
+	PostalCode   *string `json:"postal_code"`
+	Country      *string `json:"country"`
+
 	// Адрес на английском
 	AddressLine1En *string `json:"address_line1_en"`
 	AddressLine2En *string `json:"address_line2_en"`
 	CityEn         *string `json:"city_en"`
 	RegionEn       *string `json:"region_en"`
-	
-	Wishlist       *string `json:"wishlist"`
-	AntiWishlist   *string `json:"anti_wishlist"`
+
+	Wishlist     *string `json:"wishlist"`
+	AntiWishlist *string `json:"anti_wishlist"`
 }
 
 // ProfileResponse - структура ответа с профилем
 type ProfileResponse struct {
-	ID             uuid.UUID `json:"id"`
-	UserID         uuid.UUID `json:"user_id"`
-	Phone          *string   `json:"phone"`
-	About          *string   `json:"about"`
-	
+	ID     uuid.UUID `json:"id"`
+	UserID uuid.UUID `json:"user_id"`
+	Phone  *string   `json:"phone"`
+	About  *string   `json:"about"`
+
 	// Адрес на местном языке
-	AddressLine1   *string   `json:"address_line1"`
-	AddressLine2   *string   `json:"address_line2"`
-	City           *string   `json:"city"`
-	Region         *string   `json:"region"`
-	PostalCode     *string   `json:"postal_code"`
-	Country        *string   `json:"country"`
-	
+	AddressLine1 *string `json:"address_line1"`
+	AddressLine2 *string `json:"address_line2"`
+	City         *string `json:"city"`
+	Region       *string `json:"region"`
+	PostalCode   *string `json:"postal_code"`
+	Country      *string `json:"country"`
+
 	// Адрес на английском
-	AddressLine1En *string   `json:"address_line1_en"`
-	AddressLine2En *string   `json:"address_line2_en"`
-	CityEn         *string   `json:"city_en"`
-	RegionEn       *string   `json:"region_en"`
-	
-	Wishlist       *string   `json:"wishlist"`
-	AntiWishlist   *string   `json:"anti_wishlist"`
+	AddressLine1En *string `json:"address_line1_en"`
+	AddressLine2En *string `json:"address_line2_en"`
+	CityEn         *string `json:"city_en"`
+	RegionEn       *string `json:"region_en"`
+
+	Wishlist     *string `json:"wishlist"`
+	AntiWishlist *string `json:"anti_wishlist"`
 }
 
 // GetProfile - получить профиль текущего пользователя
@@ -62,7 +63,7 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	userID := c.GetString("userID")
 
 	var profile models.UserProfile
-	result := h.db.Where("user_id = ?", userID).First(&profile)
+	result := h.DB.Where("user_id = ?", userID).First(&profile)
 
 	// Если профиль не найден, возвращаем пустой профиль
 	if result.Error != nil {
@@ -102,8 +103,83 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
+	// Валидируем данные профиля
+	profileData := make(map[string]string)
+	if req.Phone != nil {
+		profileData["phone"] = *req.Phone
+	}
+	if req.About != nil {
+		profileData["about"] = *req.About
+	}
+	if req.AddressLine1 != nil {
+		profileData["address_line1"] = *req.AddressLine1
+	}
+	if req.AddressLine2 != nil {
+		profileData["address_line2"] = *req.AddressLine2
+	}
+	if req.City != nil {
+		profileData["city"] = *req.City
+	}
+	if req.Region != nil {
+		profileData["region"] = *req.Region
+	}
+	if req.PostalCode != nil {
+		profileData["postal_code"] = *req.PostalCode
+	}
+	if req.Country != nil {
+		profileData["country"] = *req.Country
+	}
+	if req.AddressLine1En != nil {
+		profileData["address_line1_en"] = *req.AddressLine1En
+	}
+	if req.AddressLine2En != nil {
+		profileData["address_line2_en"] = *req.AddressLine2En
+	}
+	if req.CityEn != nil {
+		profileData["city_en"] = *req.CityEn
+	}
+	if req.RegionEn != nil {
+		profileData["region_en"] = *req.RegionEn
+	}
+	if req.Wishlist != nil {
+		profileData["wishlist"] = *req.Wishlist
+	}
+	if req.AntiWishlist != nil {
+		profileData["anti_wishlist"] = *req.AntiWishlist
+	}
+
+	// Проверяем валидность данных
+	if err := validator.ValidateProfileData(profileData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed: " + err.Error()})
+		return
+	}
+
+	// Санитизируем все строковые поля
+	sanitizeStringPtr := func(s *string) *string {
+		if s == nil {
+			return nil
+		}
+		sanitized := validator.SanitizeString(*s)
+		return &sanitized
+	}
+
+	req.Phone = sanitizeStringPtr(req.Phone)
+	req.About = sanitizeStringPtr(req.About)
+	req.AddressLine1 = sanitizeStringPtr(req.AddressLine1)
+	req.AddressLine2 = sanitizeStringPtr(req.AddressLine2)
+	req.City = sanitizeStringPtr(req.City)
+	req.Region = sanitizeStringPtr(req.Region)
+	req.PostalCode = sanitizeStringPtr(req.PostalCode)
+	req.Country = sanitizeStringPtr(req.Country)
+	req.AddressLine1En = sanitizeStringPtr(req.AddressLine1En)
+	req.AddressLine2En = sanitizeStringPtr(req.AddressLine2En)
+	req.CityEn = sanitizeStringPtr(req.CityEn)
+	req.RegionEn = sanitizeStringPtr(req.RegionEn)
+	req.Wishlist = sanitizeStringPtr(req.Wishlist)
+	req.AntiWishlist = sanitizeStringPtr(req.AntiWishlist)
+
 	var profile models.UserProfile
-	result := h.db.Where("user_id = ?", userID).First(&profile)
+	result := h.DB.Where("user_id = ?", userID).First(&profile)
 
 	if result.Error != nil {
 		// Профиль не существует - создаем новый
@@ -124,7 +200,7 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 			Wishlist:       req.Wishlist,
 			AntiWishlist:   req.AntiWishlist,
 		}
-		if err := h.db.Create(&profile).Error; err != nil {
+		if err := h.DB.Create(&profile).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create profile"})
 			return
 		}
@@ -145,7 +221,7 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		profile.Wishlist = req.Wishlist
 		profile.AntiWishlist = req.AntiWishlist
 
-		if err := h.db.Save(&profile).Error; err != nil {
+		if err := h.DB.Save(&profile).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
 			return
 		}
@@ -170,4 +246,3 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		AntiWishlist:   profile.AntiWishlist,
 	})
 }
-

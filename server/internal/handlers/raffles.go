@@ -94,7 +94,7 @@ func (h *Handler) GetRaffles(c *gin.Context) {
 	uid, _ := uuid.Parse(userID)
 
 	var members []models.Member
-	h.db.Where("user_id = ?", uid).Find(&members)
+	h.DB.Where("user_id = ?", uid).Find(&members)
 
 	groupIDs := make([]uuid.UUID, len(members))
 	for i, m := range members {
@@ -103,7 +103,7 @@ func (h *Handler) GetRaffles(c *gin.Context) {
 
 	var groups []models.Group
 	if len(groupIDs) > 0 {
-		h.db.Preload("Members").Preload("Members.User").Where("id IN ?", groupIDs).Find(&groups)
+		h.DB.Preload("Members").Preload("Members.User").Where("id IN ?", groupIDs).Find(&groups)
 	}
 
 	response := make([]RaffleResponse, len(groups))
@@ -151,7 +151,7 @@ func (h *Handler) CreateRaffle(c *gin.Context) {
 		OwnerID:     uid,
 	}
 
-	if err := h.db.Create(&group).Error; err != nil {
+	if err := h.DB.Create(&group).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create group"})
 		return
 	}
@@ -161,10 +161,10 @@ func (h *Handler) CreateRaffle(c *gin.Context) {
 		GroupID: group.ID,
 		UserID:  uid,
 	}
-	h.db.Create(&member)
+	h.DB.Create(&member)
 
 	// Reload with members
-	h.db.Preload("Members").Preload("Members.User").First(&group, group.ID)
+	h.DB.Preload("Members").Preload("Members.User").First(&group, group.ID)
 
 	c.JSON(http.StatusCreated, h.raffleToResponse(group, uid))
 }
@@ -181,7 +181,7 @@ func (h *Handler) GetRaffle(c *gin.Context) {
 	}
 
 	var group models.Group
-	if err := h.db.Preload("Members").Preload("Members.User").First(&group, gid).Error; err != nil {
+	if err := h.DB.Preload("Members").Preload("Members.User").First(&group, gid).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Group not found"})
 		return
 	}
@@ -215,7 +215,7 @@ func (h *Handler) DeleteRaffle(c *gin.Context) {
 	}
 
 	var group models.Group
-	if err := h.db.First(&group, gid).Error; err != nil {
+	if err := h.DB.First(&group, gid).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Group not found"})
 		return
 	}
@@ -226,9 +226,9 @@ func (h *Handler) DeleteRaffle(c *gin.Context) {
 	}
 
 	// Delete assignments, members, then group
-	h.db.Where("group_id = ?", gid).Delete(&models.Assignment{})
-	h.db.Where("group_id = ?", gid).Delete(&models.Member{})
-	h.db.Delete(&group)
+	h.DB.Where("group_id = ?", gid).Delete(&models.Assignment{})
+	h.DB.Where("group_id = ?", gid).Delete(&models.Member{})
+	h.DB.Delete(&group)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Group deleted"})
 }
@@ -242,11 +242,11 @@ func (h *Handler) JoinRaffle(c *gin.Context) {
 	// Try to find by ID or invite code
 	var group models.Group
 	if gid, err := uuid.Parse(groupID); err == nil {
-		h.db.First(&group, gid)
+		h.DB.First(&group, gid)
 	}
 
 	if group.ID == uuid.Nil {
-		if err := h.db.Where("invite_code = ?", groupID).First(&group).Error; err != nil {
+		if err := h.DB.Where("invite_code = ?", groupID).First(&group).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Group not found"})
 			return
 		}
@@ -259,7 +259,7 @@ func (h *Handler) JoinRaffle(c *gin.Context) {
 
 	// Check if already member
 	var existingMember models.Member
-	if err := h.db.Where("group_id = ? AND user_id = ?", group.ID, uid).First(&existingMember).Error; err == nil {
+	if err := h.DB.Where("group_id = ? AND user_id = ?", group.ID, uid).First(&existingMember).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "You are already a member"})
 		return
 	}
@@ -271,7 +271,7 @@ func (h *Handler) JoinRaffle(c *gin.Context) {
 		UserID:  uid,
 	}
 
-	if err := h.db.Where("user_id = ?", uid).First(&userProfile).Error; err == nil {
+	if err := h.DB.Where("user_id = ?", uid).First(&userProfile).Error; err == nil {
 		// Копируем профиль в member
 		member.Phone = userProfile.Phone
 		member.About = userProfile.About
@@ -289,13 +289,13 @@ func (h *Handler) JoinRaffle(c *gin.Context) {
 		member.AntiWishlist = userProfile.AntiWishlist
 	}
 
-	if err := h.db.Create(&member).Error; err != nil {
+	if err := h.DB.Create(&member).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to join group"})
 		return
 	}
 
 	// Reload group with members
-	h.db.Preload("Members").Preload("Members.User").First(&group, group.ID)
+	h.DB.Preload("Members").Preload("Members.User").First(&group, group.ID)
 
 	c.JSON(http.StatusOK, h.raffleToResponse(group, uid))
 }
@@ -312,7 +312,7 @@ func (h *Handler) DrawNames(c *gin.Context) {
 	}
 
 	var group models.Group
-	if err := h.db.Preload("Members").First(&group, gid).Error; err != nil {
+	if err := h.DB.Preload("Members").First(&group, gid).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Group not found"})
 		return
 	}
@@ -342,7 +342,7 @@ func (h *Handler) DrawNames(c *gin.Context) {
 
 	// Load exclusions for this raffle
 	var exclusions []models.Exclusion
-	h.db.Where("group_id = ?", gid).Find(&exclusions)
+	h.DB.Where("group_id = ?", gid).Find(&exclusions)
 
 	// Build exclusion map (bidirectional)
 	exclusionMap := make(map[uuid.UUID]map[uuid.UUID]bool)
@@ -376,7 +376,7 @@ func (h *Handler) DrawNames(c *gin.Context) {
 	for giverMemberID, gifteeMemberID := range assignments {
 		giver := memberMap[giverMemberID]
 		giver.GifteeID = &gifteeMemberID
-		h.db.Save(giver)
+		h.DB.Save(giver)
 
 		// Also save to Assignment table for backward compatibility
 		assignment := models.Assignment{
@@ -384,15 +384,15 @@ func (h *Handler) DrawNames(c *gin.Context) {
 			GiverID:    giver.UserID,
 			ReceiverID: memberMap[gifteeMemberID].UserID,
 		}
-		h.db.Create(&assignment)
+		h.DB.Create(&assignment)
 	}
 
 	// Mark as drawn
 	group.IsDrawn = true
-	h.db.Save(&group)
+	h.DB.Save(&group)
 
 	// Reload with members
-	h.db.Preload("Members").Preload("Members.User").First(&group, gid)
+	h.DB.Preload("Members").Preload("Members.User").First(&group, gid)
 
 	c.JSON(http.StatusOK, h.raffleToResponse(group, uid))
 }
@@ -409,7 +409,7 @@ func (h *Handler) GetMyAssignment(c *gin.Context) {
 	}
 
 	var assignment models.Assignment
-	if err := h.db.Preload("Receiver").Where("group_id = ? AND giver_id = ?", gid, uid).First(&assignment).Error; err != nil {
+	if err := h.DB.Preload("Receiver").Where("group_id = ? AND giver_id = ?", gid, uid).First(&assignment).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "No assignment found"})
 		return
 	}
@@ -484,7 +484,7 @@ func (h *Handler) UpdateMyProfile(c *gin.Context) {
 
 	// Найти участника
 	var member models.Member
-	if err := h.db.Where("group_id = ? AND user_id = ?", rid, uid).First(&member).Error; err != nil {
+	if err := h.DB.Where("group_id = ? AND user_id = ?", rid, uid).First(&member).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "You are not a member of this raffle"})
 		return
 	}
@@ -505,7 +505,7 @@ func (h *Handler) UpdateMyProfile(c *gin.Context) {
 	member.Wishlist = req.Wishlist
 	member.AntiWishlist = req.AntiWishlist
 
-	if err := h.db.Save(&member).Error; err != nil {
+	if err := h.DB.Save(&member).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
 		return
 	}
@@ -526,7 +526,7 @@ func (h *Handler) GetMyGiftee(c *gin.Context) {
 
 	// Проверить что розыгрыш проведен
 	var group models.Group
-	if err := h.db.First(&group, rid).Error; err != nil {
+	if err := h.DB.First(&group, rid).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Raffle not found"})
 		return
 	}
@@ -538,7 +538,7 @@ func (h *Handler) GetMyGiftee(c *gin.Context) {
 
 	// Найти участника
 	var member models.Member
-	if err := h.db.Where("group_id = ? AND user_id = ?", rid, uid).First(&member).Error; err != nil {
+	if err := h.DB.Where("group_id = ? AND user_id = ?", rid, uid).First(&member).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "You are not a member of this raffle"})
 		return
 	}
@@ -551,7 +551,7 @@ func (h *Handler) GetMyGiftee(c *gin.Context) {
 
 	// Загрузить получателя с его User
 	var giftee models.Member
-	if err := h.db.Preload("User").First(&giftee, *member.GifteeID).Error; err != nil {
+	if err := h.DB.Preload("User").First(&giftee, *member.GifteeID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Giftee not found"})
 		return
 	}

@@ -20,6 +20,8 @@ import {
   Block,
 } from "@mui/icons-material";
 import * as api from "../services/api";
+import { AnonymousChat } from "../components/AnonymousChat";
+import { getCountryFlagComponent, getCountryNativeName, getCountryEnglishName } from "../utils/countries";
 
 const GifteePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +34,38 @@ const GifteePage = () => {
     enabled: !!id,
     retry: false,
   });
+
+  // Получаем информацию о раффле для member_id
+  const { data: raffle } = useQuery({
+    queryKey: ["raffle", id],
+    queryFn: () => api.getRaffle(id!),
+    enabled: !!id,
+  });
+
+  // Получаем текущего пользователя
+  const { data: currentUser } = useQuery({
+    queryKey: ["me"],
+    queryFn: api.getMe,
+  });
+
+  
+  const getCountryFlag = (countryCode: string) => {
+    const FlagComponent = getCountryFlagComponent(countryCode);
+    return FlagComponent ? (
+      <FlagComponent
+        style={{ width: "24px", height: "16px", borderRadius: "2px" }}
+      />
+    ) : (
+      <Box
+        sx={{
+          width: "24px",
+          height: "16px",
+          bgcolor: "grey.300",
+          borderRadius: "2px",
+        }}
+      />
+    );
+  };
 
   if (isLoading) {
     return (
@@ -73,36 +107,53 @@ const GifteePage = () => {
         {t("common.back")}
       </Button>
 
-      <Typography variant="h4" fontWeight={700} gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+      <Typography
+        variant="h4"
+        fontWeight={700}
+        gutterBottom
+        sx={{ fontSize: { xs: "1.5rem", sm: "2rem" } }}
+      >
         🎁 {t("giftee.title")}
       </Typography>
-      <Typography color="text.secondary" sx={{ mb: { xs: 3, sm: 4 }, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+      <Typography
+        color="text.secondary"
+        sx={{ mb: { xs: 3, sm: 4 }, fontSize: { xs: "0.875rem", sm: "1rem" } }}
+      >
         {t("giftee.subtitle")}
       </Typography>
 
       {/* Основная информация */}
       <Card sx={{ mb: { xs: 2, sm: 3 } }}>
         <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-          <Box sx={{ 
-            display: "flex", 
-            alignItems: "center", 
-            gap: { xs: 2, sm: 3 }, 
-            mb: { xs: 2, sm: 3 },
-            flexDirection: { xs: 'column', sm: 'row' },
-            textAlign: { xs: 'center', sm: 'left' }
-          }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: { xs: 2, sm: 3 },
+              mb: { xs: 2, sm: 3 },
+              flexDirection: { xs: "column", sm: "row" },
+              textAlign: { xs: "center", sm: "left" },
+            }}
+          >
             <Avatar
               src={giftee.avatarUrl || undefined}
               sx={{ width: { xs: 64, sm: 80 }, height: { xs: 64, sm: 80 } }}
             >
               {giftee.name[0]}
             </Avatar>
-            <Box sx={{ width: { xs: '100%', sm: 'auto' } }}>
-              <Typography variant="h5" fontWeight={700} sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
+            <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
+              <Typography
+                variant="h5"
+                fontWeight={700}
+                sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
+              >
                 {giftee.name}
               </Typography>
               {giftee.about && (
-                <Typography color="text.secondary" sx={{ mt: 1, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                <Typography
+                  color="text.secondary"
+                  sx={{ mt: 1, fontSize: { xs: "0.875rem", sm: "1rem" } }}
+                >
                   {giftee.about}
                 </Typography>
               )}
@@ -112,13 +163,18 @@ const GifteePage = () => {
           {/* Wishlist */}
           {giftee.wishlist && (
             <Box sx={{ mb: 3 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
+              >
                 <CardGiftcard color="primary" />
                 <Typography variant="h6" fontWeight={600}>
                   {t("giftee.wishlist")}
                 </Typography>
               </Box>
-              <Alert severity="info" sx={{ bgcolor: "success.light", color: "success.dark" }}>
+              <Alert
+                severity="info"
+                sx={{ bgcolor: "success.light", color: "success.dark" }}
+              >
                 {giftee.wishlist}
               </Alert>
             </Box>
@@ -127,15 +183,15 @@ const GifteePage = () => {
           {/* Anti-wishlist */}
           {giftee.anti_wishlist && (
             <Box sx={{ mb: 3 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
+              >
                 <Block color="error" />
                 <Typography variant="h6" fontWeight={600}>
                   {t("giftee.antiWishlist")}
                 </Typography>
               </Box>
-              <Alert severity="warning">
-                {giftee.anti_wishlist}
-              </Alert>
+              <Alert severity="warning">{giftee.anti_wishlist}</Alert>
             </Box>
           )}
         </CardContent>
@@ -144,7 +200,12 @@ const GifteePage = () => {
       {/* Контактная информация */}
       <Card>
         <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-          <Typography variant="h6" fontWeight={600} gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+          <Typography
+            variant="h6"
+            fontWeight={600}
+            gutterBottom
+            sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}
+          >
             {t("giftee.contactInfo")}
           </Typography>
           <Alert severity="info" sx={{ mb: { xs: 2, sm: 3 } }}>
@@ -154,7 +215,9 @@ const GifteePage = () => {
           {/* Телефон */}
           {giftee.phone && (
             <Box sx={{ mb: 3 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
+              >
                 <Phone fontSize="small" color="action" />
                 <Typography fontWeight={600}>{t("profile.phone")}</Typography>
               </Box>
@@ -165,36 +228,76 @@ const GifteePage = () => {
           {/* Адрес */}
           {(giftee.address_line1 || giftee.city || giftee.country) && (
             <Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
+              >
                 <LocationOn fontSize="small" color="action" />
-                <Typography fontWeight={600}>{t("giftee.deliveryAddress")}</Typography>
+                <Typography fontWeight={600}>
+                  {t("giftee.deliveryAddress")}
+                </Typography>
               </Box>
-              
+
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   {t("giftee.localAddress")}
                 </Typography>
-                {giftee.address_line1 && <Typography>{giftee.address_line1}</Typography>}
-                {giftee.address_line2 && <Typography>{giftee.address_line2}</Typography>}
+                {giftee.address_line1 && (
+                  <Typography>{giftee.address_line1}</Typography>
+                )}
+                {giftee.address_line2 && (
+                  <Typography>{giftee.address_line2}</Typography>
+                )}
                 {giftee.city && <Typography>{giftee.city}</Typography>}
                 {giftee.region && <Typography>{giftee.region}</Typography>}
-                {giftee.postal_code && <Typography>{giftee.postal_code}</Typography>}
-                {giftee.country && <Typography>{giftee.country}</Typography>}
+                {giftee.postal_code && (
+                  <Typography>{giftee.postal_code}</Typography>
+                )}
+                {giftee.country && (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    {getCountryFlag(giftee.country)}
+                    <Typography>
+                      {getCountryNativeName(giftee.country)}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
 
               {(giftee.address_line1_en || giftee.city_en) && (
                 <>
                   <Divider sx={{ my: 2 }} />
                   <Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
                       {t("giftee.englishAddress")}
                     </Typography>
-                    {giftee.address_line1_en && <Typography>{giftee.address_line1_en}</Typography>}
-                    {giftee.address_line2_en && <Typography>{giftee.address_line2_en}</Typography>}
-                    {giftee.city_en && <Typography>{giftee.city_en}</Typography>}
-                    {giftee.region_en && <Typography>{giftee.region_en}</Typography>}
-                    {giftee.postal_code && <Typography>{giftee.postal_code}</Typography>}
-                    {giftee.country && <Typography>{giftee.country}</Typography>}
+                    {giftee.address_line1_en && (
+                      <Typography>{giftee.address_line1_en}</Typography>
+                    )}
+                    {giftee.address_line2_en && (
+                      <Typography>{giftee.address_line2_en}</Typography>
+                    )}
+                    {giftee.city_en && (
+                      <Typography>{giftee.city_en}</Typography>
+                    )}
+                    {giftee.region_en && (
+                      <Typography>{giftee.region_en}</Typography>
+                    )}
+                    {giftee.postal_code && (
+                      <Typography>{giftee.postal_code}</Typography>
+                    )}
+                    {giftee.country && (
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        {getCountryFlag(giftee.country)}
+                        <Typography>
+                          {getCountryEnglishName(giftee.country)}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 </>
               )}
@@ -202,12 +305,18 @@ const GifteePage = () => {
           )}
 
           {!giftee.phone && !giftee.address_line1 && !giftee.city && (
-            <Alert severity="warning">
-              {t("giftee.noContactInfo")}
-            </Alert>
+            <Alert severity="warning">{t("giftee.noContactInfo")}</Alert>
           )}
         </CardContent>
       </Card>
+
+      {/* Плавающий чат */}
+      {raffle && currentUser && (
+        <AnonymousChat
+          raffleId={id!}
+          memberId={raffle.members.find((m) => m.userId === currentUser.id)?.id || ""}
+        />
+      )}
     </Box>
   );
 };

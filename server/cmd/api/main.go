@@ -44,6 +44,11 @@ func main() {
 		log.Fatal("Failed to initialize S3 storage:", err)
 	}
 
+	// Initialize WebSocket Hub с ключом шифрования
+	hub := handlers.NewHub(db, cfg.EncryptionKey)
+	go hub.Run()
+	log.Println("WebSocket Hub started")
+
 	// Setup Gin
 	if cfg.Env == "production" {
 		gin.SetMode(gin.ReleaseMode)
@@ -76,7 +81,7 @@ func main() {
 	})
 
 	// Initialize handlers
-	h := handlers.New(db, cfg, s3Storage)
+	h := handlers.New(db, cfg, s3Storage, hub)
 
 	// API routes
 	api := r.Group("/api")
@@ -124,7 +129,15 @@ func main() {
 			protected.GET("/raffles/:id/exclusions", h.GetExclusions)
 			protected.POST("/raffles/:id/exclusions", h.CreateExclusion)
 			protected.DELETE("/raffles/:id/exclusions/:exclusionId", h.DeleteExclusion)
+
+			// Chat REST API (protected)
+			protected.GET("/raffles/:id/chat/giftee", h.GetChatWithGiftee)
+			protected.GET("/raffles/:id/chat/santa", h.GetChatWithSanta)
+			protected.GET("/raffles/:id/chat/unread", h.GetUnreadCount)
 		}
+
+		// WebSocket endpoint (auth via query parameter, not middleware)
+		api.GET("/raffles/:id/chat/ws", h.HandleWebSocket)
 	}
 
 	// Start server

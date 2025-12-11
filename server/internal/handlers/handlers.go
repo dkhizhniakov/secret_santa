@@ -8,11 +8,19 @@ import (
 )
 
 type Handler struct {
-	db      *gorm.DB
-	cfg     *config.Config
-	storage *storage.S3Storage
+	DB            *gorm.DB
+	cfg           *config.Config
+	storage       *storage.S3Storage
+	Hub           *Hub
+	encryptionKey []byte
 }
 
-func New(db *gorm.DB, cfg *config.Config, s3 *storage.S3Storage) *Handler {
-	return &Handler{db: db, cfg: cfg, storage: s3}
+func New(db *gorm.DB, cfg *config.Config, s3 *storage.S3Storage, hub *Hub) *Handler {
+	return &Handler{
+		DB:            db,
+		cfg:           cfg,
+		storage:       s3,
+		Hub:           hub,
+		encryptionKey: cfg.EncryptionKey,
+	}
 }

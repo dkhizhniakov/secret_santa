@@ -1,6 +1,8 @@
 package config
 
 import (
+	"encoding/base64"
+	"log"
 	"os"
 	"strings"
 )
@@ -30,6 +32,9 @@ type Config struct {
 	AWSSecretKey string
 	AWSRegion    string
 	S3Bucket     string
+
+	// Шифрование сообщений в БД (32 байта)
+	EncryptionKey []byte
 }
 
 func Load() *Config {
@@ -73,6 +78,9 @@ func Load() *Config {
 		AWSSecretKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 		AWSRegion:    getEnv("AWS_REGION", "eu-south-2"),
 		S3Bucket:     os.Getenv("S3_BUCKET"),
+
+		// Шифрование (base64 строка, которая декодируется в 32 байта)
+		EncryptionKey: decodeEncryptionKey(getEnv("ENCRYPTION_KEY", "ZGV2LWVuY3J5cHRpb24ta2V5LTMyLWJ5dGVzISE=")),
 	}
 }
 
@@ -81,4 +89,20 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// decodeEncryptionKey декодирует base64 строку в 32 байта
+func decodeEncryptionKey(base64Key string) []byte {
+	key, err := base64.StdEncoding.DecodeString(base64Key)
+	if err != nil {
+		log.Printf("Warning: failed to decode encryption key from base64, using as-is: %v", err)
+		// Если не base64, используем как есть (возможно это просто 32-символьная строка)
+		key = []byte(base64Key)
+	}
+
+	if len(key) != 32 {
+		log.Fatalf("Encryption key must be exactly 32 bytes, got %d bytes. Generate with: openssl rand -base64 32", len(key))
+	}
+
+	return key
 }

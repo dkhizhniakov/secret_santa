@@ -16,6 +16,7 @@ import {
 import { getCountries } from "libphonenumber-js";
 import * as CountryFlagIcons from "country-flag-icons/react/3x2";
 import transliterate from "@sindresorhus/transliterate";
+import { getCountryFlagComponent } from "../utils/countries";
 
 export interface ProfileFormData {
   phone?: string | null;
@@ -104,7 +105,7 @@ export const ProfileFormFields = ({
   };
 
   const getCountryFlag = (countryCode: string) => {
-    const FlagComponent = (CountryFlagIcons as any)[countryCode];
+    const FlagComponent = getCountryFlagComponent(countryCode);
     return FlagComponent ? (
       <FlagComponent
         style={{ width: "24px", height: "16px", borderRadius: "2px" }}

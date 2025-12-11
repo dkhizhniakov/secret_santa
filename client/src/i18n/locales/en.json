@@ -124,7 +124,8 @@
     "yourProfileNotFilled": "⚠️ You haven't filled your profile yet! Fill it so your Secret Santa knows what to gift you.",
     "fillProfile": "Fill Profile",
     "fillMyProfile": "Fill My Profile",
-    "profileUpdated": "Profile successfully updated!"
+    "profileUpdated": "Profile successfully updated!",
+    "chatHint": "Now you can chat anonymously! Click the chat button in the bottom right corner."
   },
   "participantProfile": {
     "title": "Your Raffle Profile",
@@ -199,5 +200,22 @@
     "invalidPhone": "Invalid phone number format",
     "minValue": "Minimum {{min}}",
     "budgetMinMax": "Minimum cannot be greater than maximum"
+  },
+  "chat": {
+    "anonymous_chat": "Anonymous Chat",
+    "with_giftee": "Chat with your Giftee",
+    "with_santa": "Chat with your Secret Santa",
+    "my_giftee": "My Giftee",
+    "my_santa": "My Santa",
+    "santa_description": "You can chat with your giftee anonymously. They don't know who you are!",
+    "giftee_description": "Your Secret Santa can message you anonymously to learn more about your preferences.",
+    "no_messages": "No messages yet. Start the conversation!",
+    "no_messages_giftee": "No messages with your giftee yet. Start the conversation!",
+    "no_messages_santa": "No messages with your Secret Santa yet. Wait for a message!",
+    "type_message": "Type a message...",
+    "connected": "Connected",
+    "connecting": "Connecting...",
+    "combined_hint": "Stay anonymous — discuss only delivery & preferences.",
+    "use_for": "💡 Use chat to clarify delivery details, sizes, preferences, etc."
   }
 }

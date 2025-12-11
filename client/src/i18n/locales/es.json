@@ -124,7 +124,8 @@
     "yourProfileNotFilled": "⚠️ ¡Aún no has completado tu perfil! Complétalo para que tu Amigo Invisible sepa qué regalarte.",
     "fillProfile": "Completar Perfil",
     "fillMyProfile": "Completar Mi Perfil",
-    "profileUpdated": "¡Perfil actualizado con éxito!"
+    "profileUpdated": "¡Perfil actualizado con éxito!",
+    "chatHint": "¡Ahora puedes chatear de forma anónima! Haz clic en el botón de chat en la esquina inferior derecha."
   },
   "participantProfile": {
     "title": "Tu Perfil en el Sorteo",
@@ -199,5 +200,22 @@
     "invalidPhone": "Formato de número de teléfono no válido",
     "minValue": "Mínimo {{min}}",
     "budgetMinMax": "El mínimo no puede ser mayor que el máximo"
+  },
+  "chat": {
+    "anonymous_chat": "Chat Anónimo",
+    "with_giftee": "Chat con tu Destinatario",
+    "with_santa": "Chat con tu Amigo Invisible",
+    "my_giftee": "Mi Destinatario",
+    "my_santa": "Mi Santa",
+    "santa_description": "Puedes chatear con tu destinatario de forma anónima. ¡No saben quién eres!",
+    "giftee_description": "Tu Amigo Invisible puede enviarte mensajes de forma anónima para conocer más sobre tus preferencias.",
+    "no_messages": "Aún no hay mensajes. ¡Comienza la conversación!",
+    "no_messages_giftee": "Aún no hay mensajes con tu destinatario. ¡Comienza la conversación!",
+    "no_messages_santa": "Aún no hay mensajes con tu Amigo Invisible. ¡Espera un mensaje!",
+    "type_message": "Escribe un mensaje...",
+    "connected": "Conectado",
+    "connecting": "Conectando...",
+    "combined_hint": "Mantente anónimo — discute solo entrega y preferencias.",
+    "use_for": "💡 Usa el chat para aclarar detalles de entrega, tallas, preferencias, etc."
   }
 }

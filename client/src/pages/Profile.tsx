@@ -24,6 +24,16 @@ import {
   ProfileFormFields,
   ProfileFormData,
 } from "../components/ProfileFormFields";
+import {
+  validatePhone,
+  validatePostalCode,
+  containsDangerousContent,
+  MAX_ABOUT_LENGTH,
+  MAX_ADDRESS_LENGTH,
+  MAX_CITY_LENGTH,
+  MAX_REGION_LENGTH,
+  MAX_WISHLIST_LENGTH,
+} from "../utils/validator";
 
 const getProfileSchema = (t: (key: string, params?: any) => string) =>
   z.object({
@@ -34,68 +44,120 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       .refine(
         (val) => !val || matchIsValidTel(val),
         t("validation.invalidPhone")
+      )
+      .refine(
+        (val) => !val || !validatePhone(val),
+        t("validation.invalidPhone")
       ),
     about: z
       .string()
-      .max(1000, t("validation.maxChars", { count: 1000 }))
+      .max(MAX_ABOUT_LENGTH, t("validation.maxChars", { count: MAX_ABOUT_LENGTH }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     address_line1: z
       .string()
-      .max(200, t("validation.maxChars", { count: 200 }))
+      .max(MAX_ADDRESS_LENGTH, t("validation.maxChars", { count: MAX_ADDRESS_LENGTH }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     address_line2: z
       .string()
-      .max(200, t("validation.maxChars", { count: 200 }))
+      .max(MAX_ADDRESS_LENGTH, t("validation.maxChars", { count: MAX_ADDRESS_LENGTH }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     city: z
       .string()
-      .max(100, t("validation.maxChars", { count: 100 }))
+      .max(MAX_CITY_LENGTH, t("validation.maxChars", { count: MAX_CITY_LENGTH }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     region: z
       .string()
-      .max(100, t("validation.maxChars", { count: 100 }))
+      .max(MAX_REGION_LENGTH, t("validation.maxChars", { count: MAX_REGION_LENGTH }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     postal_code: z
       .string()
       .max(20, t("validation.maxChars", { count: 20 }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !validatePostalCode(val),
+        "Invalid postal code"
+      ),
     country: z.string().optional().nullable(),
     address_line1_en: z
       .string()
-      .max(200, t("validation.maxChars", { count: 200 }))
+      .max(MAX_ADDRESS_LENGTH, t("validation.maxChars", { count: MAX_ADDRESS_LENGTH }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     address_line2_en: z
       .string()
-      .max(200, t("validation.maxChars", { count: 200 }))
+      .max(MAX_ADDRESS_LENGTH, t("validation.maxChars", { count: MAX_ADDRESS_LENGTH }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     city_en: z
       .string()
-      .max(100, t("validation.maxChars", { count: 100 }))
+      .max(MAX_CITY_LENGTH, t("validation.maxChars", { count: MAX_CITY_LENGTH }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     region_en: z
       .string()
-      .max(100, t("validation.maxChars", { count: 100 }))
+      .max(MAX_REGION_LENGTH, t("validation.maxChars", { count: MAX_REGION_LENGTH }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     wishlist: z
       .string()
-      .max(2000, t("validation.maxChars", { count: 2000 }))
+      .max(MAX_WISHLIST_LENGTH, t("validation.maxChars", { count: MAX_WISHLIST_LENGTH }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     anti_wishlist: z
       .string()
-      .max(1000, t("validation.maxChars", { count: 1000 }))
+      .max(MAX_WISHLIST_LENGTH, t("validation.maxChars", { count: MAX_WISHLIST_LENGTH }))
       .optional()
-      .nullable(),
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
   });
 
 export default function Profile() {

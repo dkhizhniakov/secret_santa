@@ -42,9 +42,9 @@ func Auth(jwtSecret string) gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userID", claims["sub"])
+		c.Set("user_id", claims["sub"])
+		c.Set("userID", claims["sub"]) // backward compatibility
 		c.Set("email", claims["email"])
 		c.Next()
 	}
 }
-
