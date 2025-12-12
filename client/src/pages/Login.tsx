@@ -237,9 +237,9 @@ const Login = () => {
     window.location.href = `${API_URL}/auth/google`;
   };
 
-  const handleYandexLogin = () => {
-    window.location.href = `${API_URL}/auth/yandex`;
-  };
+  // const handleYandexLogin = () => {
+  //   window.location.href = `${API_URL}/auth/yandex`;
+  // };
 
   if (loading) {
     return (
