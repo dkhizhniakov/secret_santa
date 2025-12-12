@@ -42,6 +42,11 @@ export const telegramLogin = async (telegramData: any): Promise<{ token: string;
   return data;
 };
 
+export const vkLogin = async (token: string, uuid: string): Promise<{ token: string; user: User }> => {
+  const { data } = await api.post('/auth/vk', { token, uuid });
+  return data;
+};
+
 export const logout = async (): Promise<void> => {
   await api.post('/auth/logout');
   localStorage.removeItem('token');

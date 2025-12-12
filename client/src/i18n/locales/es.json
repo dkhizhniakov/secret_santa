@@ -20,6 +20,7 @@
     "title": "Secret Santa",
     "subtitle": "Organiza intercambios de regalos con amigos y colegas",
     "googleButton": "Iniciar sesión con Google",
+    "yandexButton": "Iniciar sesión con Yandex",
     "authenticating": "Autenticando...",
     "termsAccept": "Al iniciar sesión, aceptas los términos de uso",
     "errors": {
@@ -29,6 +30,7 @@
       "userinfo_failed": "No se pudieron obtener los datos del usuario",
       "db_error": "Error de base de datos",
       "telegram_failed": "Error de autorización de Telegram",
+      "vk_failed": "Error de autorización de VK",
       "unknown": "Ocurrió un error al iniciar sesión"
     }
   },

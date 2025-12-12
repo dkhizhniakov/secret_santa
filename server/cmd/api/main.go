@@ -93,6 +93,13 @@ func main() {
 			auth.GET("/google", h.GoogleLogin)
 			auth.GET("/google/callback", h.GoogleCallback)
 
+			// VK ID Login
+			auth.POST("/vk", h.VKLogin)
+
+			// Yandex OAuth
+			auth.GET("/yandex", h.YandexLogin)
+			auth.GET("/yandex/callback", h.YandexCallback)
+
 			// Telegram Login
 			auth.POST("/telegram", h.TelegramLogin)
 

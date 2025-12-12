@@ -8,7 +8,6 @@ import {
   Button,
   Typography,
   Alert,
-  Divider,
   CircularProgress,
 } from "@mui/material";
 import { CardGiftcard, Google } from "@mui/icons-material";
@@ -28,10 +27,23 @@ interface TelegramUser {
   hash: string;
 }
 
-// Extend window for Telegram callback
+// VK ID SDK types
+interface VKIDPayload {
+  code: string;
+  device_id: string;
+}
+
+interface VKIDAuthData {
+  access_token: string;
+  id_token: string;
+  user_id: number;
+}
+
+// Extend window for callbacks
 declare global {
   interface Window {
     onTelegramAuth: (user: TelegramUser) => void;
+    VKIDSDK: any;
   }
 }
 
@@ -42,6 +54,7 @@ const Login = () => {
   const { isAuthenticated, loading, setToken } = useAuth();
   const error = searchParams.get("error");
   const telegramContainerRef = useRef<HTMLDivElement>(null);
+  const vkContainerRef = useRef<HTMLDivElement>(null);
 
   // Setup Telegram widget
   useEffect(() => {
@@ -52,11 +65,11 @@ const Login = () => {
         const response = await api.telegramLogin(user);
         console.log("Telegram auth response:", response);
         await setToken(response.token);
-        
+
         // Проверяем сохраненный URL для редиректа
-        const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+        const redirectUrl = sessionStorage.getItem("redirectAfterLogin");
         if (redirectUrl) {
-          sessionStorage.removeItem('redirectAfterLogin');
+          sessionStorage.removeItem("redirectAfterLogin");
           navigate(redirectUrl);
         } else {
           navigate("/");
@@ -89,12 +102,130 @@ const Login = () => {
     };
   }, [navigate, setToken]);
 
+  // Setup VK ID widget
+  useEffect(() => {
+    // Функция для обработки успешного входа через VK
+    const vkidOnSuccess = async (data: VKIDAuthData) => {
+      try {
+        console.log("VK auth data:", data);
+        const response = await api.vkLogin(data.access_token, data.id_token);
+        console.log("VK auth response:", response);
+        await setToken(response.token);
+
+        // Проверяем сохраненный URL для редиректа
+        const redirectUrl = sessionStorage.getItem("redirectAfterLogin");
+        if (redirectUrl) {
+          sessionStorage.removeItem("redirectAfterLogin");
+          navigate(redirectUrl);
+        } else {
+          navigate("/");
+        }
+      } catch (err: any) {
+        console.error("VK auth error:", err);
+        console.error("Error response:", err.response?.data);
+        navigate("/login?error=vk_failed");
+      }
+    };
+
+    const vkidOnError = (error: any) => {
+      console.error("VK ID error:", error);
+      navigate("/login?error=vk_failed");
+    };
+
+    // Загружаем VK ID SDK
+    if (!document.getElementById("vk-id-sdk")) {
+      const script = document.createElement("script");
+      script.id = "vk-id-sdk";
+      script.src = "https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js";
+      script.async = true;
+
+      script.onload = () => {
+        if (
+          "VKIDSDK" in window &&
+          vkContainerRef.current &&
+          !vkContainerRef.current.hasChildNodes()
+        ) {
+          const VKID = window.VKIDSDK;
+
+          VKID.Config.init({
+            app: 54396280, // Ваш VK App ID
+            redirectUrl: `${window.location.origin}/api/auth/vk/callback`,
+            responseMode: VKID.ConfigResponseMode.Callback,
+            source: VKID.ConfigSource.LOWCODE,
+            scope: "",
+          });
+
+          const oneTap = new VKID.OneTap();
+
+          oneTap
+            .render({
+              container: vkContainerRef.current,
+              showAlternativeLogin: true,
+              oauthList: ["ok_ru", "mail_ru"],
+            })
+            .on(VKID.WidgetEvents.ERROR, vkidOnError)
+            .on(
+              VKID.OneTapInternalEvents.LOGIN_SUCCESS,
+              function (payload: VKIDPayload) {
+                const code = payload.code;
+                const deviceId = payload.device_id;
+
+                VKID.Auth.exchangeCode(code, deviceId)
+                  .then(vkidOnSuccess)
+                  .catch(vkidOnError);
+              }
+            );
+        }
+      };
+
+      document.head.appendChild(script);
+    } else {
+      // SDK уже загружен
+      if (
+        "VKIDSDK" in window &&
+        vkContainerRef.current &&
+        !vkContainerRef.current.hasChildNodes()
+      ) {
+        const VKID = window.VKIDSDK;
+
+        VKID.Config.init({
+          app: 54396280,
+          redirectUrl: `${window.location.origin}/api/auth/vk/callback`,
+          responseMode: VKID.ConfigResponseMode.Callback,
+          source: VKID.ConfigSource.LOWCODE,
+          scope: "",
+        });
+
+        const oneTap = new VKID.OneTap();
+
+        oneTap
+          .render({
+            container: vkContainerRef.current,
+            showAlternativeLogin: true,
+            oauthList: ["ok_ru", "mail_ru"],
+          })
+          .on(VKID.WidgetEvents.ERROR, vkidOnError)
+          .on(
+            VKID.OneTapInternalEvents.LOGIN_SUCCESS,
+            function (payload: VKIDPayload) {
+              const code = payload.code;
+              const deviceId = payload.device_id;
+
+              VKID.Auth.exchangeCode(code, deviceId)
+                .then(vkidOnSuccess)
+                .catch(vkidOnError);
+            }
+          );
+      }
+    }
+  }, [navigate, setToken]);
+
   useEffect(() => {
     if (isAuthenticated) {
       // Проверяем сохраненный URL для редиректа
-      const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+      const redirectUrl = sessionStorage.getItem("redirectAfterLogin");
       if (redirectUrl) {
-        sessionStorage.removeItem('redirectAfterLogin');
+        sessionStorage.removeItem("redirectAfterLogin");
         navigate(redirectUrl);
       } else {
         navigate("/");
@@ -104,6 +235,10 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     window.location.href = `${API_URL}/auth/google`;
+  };
+
+  const handleYandexLogin = () => {
+    window.location.href = `${API_URL}/auth/yandex`;
   };
 
   if (loading) {
@@ -147,7 +282,7 @@ const Login = () => {
 
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
-              {t(`login.errors.${error}`) !== `login.errors.${error}` 
+              {t(`login.errors.${error}`) !== `login.errors.${error}`
                 ? t(`login.errors.${error}`)
                 : t("login.errors.unknown")}
             </Alert>
@@ -169,12 +304,6 @@ const Login = () => {
             {t("login.googleButton")}
           </Button>
 
-          <Divider sx={{ my: 2 }}>
-            <Typography color="text.secondary" variant="body2">
-              {t("common.or")}
-            </Typography>
-          </Divider>
-
           {/* Telegram Login Widget */}
           <Box
             ref={telegramContainerRef}
@@ -184,6 +313,48 @@ const Login = () => {
               minHeight: 48,
             }}
           />
+
+          {/* VK ID Widget */}
+          <Box
+            ref={vkContainerRef}
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              mb: 2,
+              minHeight: 48,
+            }}
+          />
+
+          {/* <Button
+            fullWidth
+            variant="contained"
+            size="large"
+            startIcon={
+              <Box
+                component="span"
+                sx={{
+                  width: 24,
+                  height: 24,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "20px",
+                  fontWeight: "bold",
+                }}
+              >
+                Я
+              </Box>
+            }
+            onClick={handleYandexLogin}
+            sx={{
+              mb: 2,
+              py: 1.5,
+              bgcolor: "#FC3F1D",
+              "&:hover": { bgcolor: "#E63600" },
+            }}
+          >
+            {t("login.yandexButton")}
+          </Button> */}
 
           <Typography
             align="center"

@@ -27,6 +27,10 @@ type Config struct {
 	// Telegram Login
 	TelegramBotToken string
 
+	// Yandex OAuth
+	YandexClientID     string
+	YandexClientSecret string
+
 	// AWS S3 для хранения файлов
 	AWSAccessKey string
 	AWSSecretKey string
@@ -72,6 +76,10 @@ func Load() *Config {
 
 		// Telegram Login
 		TelegramBotToken: os.Getenv("TELEGRAM_BOT_TOKEN"),
+
+		// Yandex OAuth
+		YandexClientID:     os.Getenv("YANDEX_CLIENT_ID"),
+		YandexClientSecret: os.Getenv("YANDEX_CLIENT_SECRET"),
 
 		// AWS S3
 		AWSAccessKey: os.Getenv("AWS_ACCESS_KEY_ID"),

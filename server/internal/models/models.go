@@ -6,11 +6,13 @@ import (
 	"github.com/google/uuid"
 )
 
-// User - пользователь системы (авторизация только через Google/Telegram)
+// User - пользователь системы (авторизация через Google/Telegram/VK/Yandex)
 type User struct {
 	ID         uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"id"`
 	GoogleID   *string   `gorm:"uniqueIndex" json:"-"`
 	TelegramID *int64    `gorm:"uniqueIndex" json:"-"`
+	VKID       *int64    `gorm:"uniqueIndex" json:"-"`
+	YandexID   *string   `gorm:"uniqueIndex" json:"-"`
 	Name       string    `gorm:"not null" json:"name"`
 	AvatarURL  *string   `json:"avatar_url"`
 	CreatedAt  time.Time `json:"created_at"`
@@ -127,7 +129,7 @@ type Message struct {
 	GroupID   uuid.UUID  `gorm:"type:uuid;not null;index:idx_group_chat" json:"group_id"`
 	SantaID   uuid.UUID  `gorm:"type:uuid;not null;index:idx_santa_chat" json:"santa_id"`   // Member ID дарителя
 	GifteeID  uuid.UUID  `gorm:"type:uuid;not null;index:idx_giftee_chat" json:"giftee_id"` // Member ID получателя
-	FromSanta bool       `gorm:"not null" json:"from_santa"` // true = от дарителя, false = от получателя
+	FromSanta bool       `gorm:"not null" json:"from_santa"`                                // true = от дарителя, false = от получателя
 	Content   string     `gorm:"type:text;not null" json:"content"`
 	ReadAt    *time.Time `json:"read_at"`
 	CreatedAt time.Time  `json:"created_at"`

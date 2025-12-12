@@ -20,6 +20,7 @@
     "title": "Secret Santa",
     "subtitle": "Organize gift exchanges with friends and colleagues",
     "googleButton": "Sign in with Google",
+    "yandexButton": "Sign in with Yandex",
     "authenticating": "Authenticating...",
     "termsAccept": "By signing in, you agree to the terms of use",
     "errors": {
@@ -29,6 +30,7 @@
       "userinfo_failed": "Failed to retrieve user data",
       "db_error": "Database error",
       "telegram_failed": "Telegram authorization error",
+      "vk_failed": "VK authorization error",
       "unknown": "An error occurred during login"
     }
   },
