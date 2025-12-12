@@ -11,7 +11,7 @@ type User struct {
 	ID         uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"id"`
 	GoogleID   *string   `gorm:"uniqueIndex" json:"-"`
 	TelegramID *int64    `gorm:"uniqueIndex" json:"-"`
-	VKID       *int64    `gorm:"uniqueIndex" json:"-"`
+	VKID       *string   `gorm:"uniqueIndex" json:"-"`
 	YandexID   *string   `gorm:"uniqueIndex" json:"-"`
 	Name       string    `gorm:"not null" json:"name"`
 	AvatarURL  *string   `json:"avatar_url"`

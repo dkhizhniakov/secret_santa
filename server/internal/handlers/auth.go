@@ -55,7 +55,7 @@ type VKUserInfo struct {
 // VK ID API response structure
 type VKIDUserInfo struct {
 	User struct {
-		UserID    int64  `json:"user_id"`
+		UserID    string `json:"user_id"` // VK возвращает строку, не int!
 		FirstName string `json:"first_name"`
 		LastName  string `json:"last_name"`
 		Avatar    string `json:"avatar"`
@@ -261,14 +261,14 @@ func (h *Handler) VKLogin(c *gin.Context) {
 	}
 
 	// Проверяем что user_id получен
-	if vkUser.User.UserID == 0 {
+	if vkUser.User.UserID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user_id in response"})
 		return
 	}
 
 	// Создаем структуру для findOrCreateVKUser
 	vkUserData := struct {
-		ID        int64  `json:"id"`
+		ID        string `json:"id"`
 		FirstName string `json:"first_name"`
 		LastName  string `json:"last_name"`
 		Photo     string `json:"photo_200"`
@@ -304,7 +304,7 @@ func (h *Handler) VKLogin(c *gin.Context) {
 }
 
 func (h *Handler) findOrCreateVKUser(vkUserData struct {
-	ID        int64  `json:"id"`
+	ID        string `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Photo     string `json:"photo_200"`
