@@ -221,15 +221,10 @@ func (h *Handler) VKLogin(c *gin.Context) {
 	}
 
 	// Получаем информацию о пользователе через VK API с access_token
+	// VK ID SDK требует access_token в параметрах запроса
 	client := &http.Client{}
-	vkReq, err := http.NewRequest("GET", "https://api.vk.com/method/users.get?fields=photo_200&v=5.131", nil)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
-		return
-	}
-	vkReq.Header.Set("Authorization", "Bearer "+req.Token)
-
-	resp, err := client.Do(vkReq)
+	vkURL := fmt.Sprintf("https://api.vk.com/method/users.get?fields=photo_200&v=5.131&access_token=%s", req.Token)
+	resp, err := client.Get(vkURL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user info"})
 		return
@@ -237,9 +232,13 @@ func (h *Handler) VKLogin(c *gin.Context) {
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
+
+	// Логируем ответ от VK для отладки
+	fmt.Printf("VK API response: %s\n", string(body))
+
 	var vkUser VKUserInfo
 	if err := json.Unmarshal(body, &vkUser); err != nil || len(vkUser.Response) == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid VK token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid VK token", "details": string(body)})
 		return
 	}
 
