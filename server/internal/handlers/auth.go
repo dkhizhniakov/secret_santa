@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -224,14 +225,22 @@ func (h *Handler) VKLogin(c *gin.Context) {
 	}
 
 	// Получаем информацию о пользователе через VK ID API
-	// Используем новый endpoint для VK ID токенов
+	// По документации: токен передается в теле POST запроса, не в заголовке!
 	client := &http.Client{}
-	vkReq, err := http.NewRequest("GET", "https://id.vk.ru/oauth2/user_info", nil)
+
+	// Формируем данные для POST запроса с URL-encoding
+	formData := url.Values{}
+	formData.Set("client_id", "54396280")
+	formData.Set("access_token", req.Token)
+
+	vkReq, err := http.NewRequest("POST", "https://id.vk.ru/oauth2/user_info", strings.NewReader(formData.Encode()))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
 		return
 	}
-	vkReq.Header.Set("Authorization", "Bearer "+req.Token)
+
+	// Обязательно: Content-Type должен быть application/x-www-form-urlencoded
+	vkReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := client.Do(vkReq)
 	if err != nil {
