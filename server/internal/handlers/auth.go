@@ -51,18 +51,21 @@ type VKUserInfo struct {
 	} `json:"response"`
 }
 
-type VKIDLoginRequest struct {
-	Token string `json:"token"` // access_token from VK ID
-	UUID  string `json:"uuid"`  // id_token from VK ID
-}
-
+// VK ID API response structure
 type VKIDUserInfo struct {
 	User struct {
 		UserID    int64  `json:"user_id"`
 		FirstName string `json:"first_name"`
 		LastName  string `json:"last_name"`
 		Avatar    string `json:"avatar"`
+		Email     string `json:"email"`
+		Phone     string `json:"phone"`
 	} `json:"user"`
+}
+
+type VKIDLoginRequest struct {
+	Token string `json:"token"` // access_token from VK ID
+	UUID  string `json:"uuid"`  // id_token from VK ID
 }
 
 type YandexUserInfo struct {
@@ -220,11 +223,17 @@ func (h *Handler) VKLogin(c *gin.Context) {
 		return
 	}
 
-	// Получаем информацию о пользователе через VK API с access_token
-	// VK ID SDK требует access_token в параметрах запроса
+	// Получаем информацию о пользователе через VK ID API
+	// Используем новый endpoint для VK ID токенов
 	client := &http.Client{}
-	vkURL := fmt.Sprintf("https://api.vk.com/method/users.get?fields=photo_200&v=5.131&access_token=%s", req.Token)
-	resp, err := client.Get(vkURL)
+	vkReq, err := http.NewRequest("GET", "https://id.vk.ru/oauth2/user_info", nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
+		return
+	}
+	vkReq.Header.Set("Authorization", "Bearer "+req.Token)
+
+	resp, err := client.Do(vkReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user info"})
 		return
@@ -234,16 +243,35 @@ func (h *Handler) VKLogin(c *gin.Context) {
 	body, _ := io.ReadAll(resp.Body)
 
 	// Логируем ответ от VK для отладки
-	fmt.Printf("VK API response: %s\n", string(body))
+	fmt.Printf("VK ID API response: %s\n", string(body))
 
-	var vkUser VKUserInfo
-	if err := json.Unmarshal(body, &vkUser); err != nil || len(vkUser.Response) == 0 {
+	var vkUser VKIDUserInfo
+	if err := json.Unmarshal(body, &vkUser); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid VK token", "details": string(body)})
 		return
 	}
 
+	// Проверяем что user_id получен
+	if vkUser.User.UserID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user_id in response"})
+		return
+	}
+
+	// Создаем структуру для findOrCreateVKUser
+	vkUserData := struct {
+		ID        int64  `json:"id"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Photo     string `json:"photo_200"`
+	}{
+		ID:        vkUser.User.UserID,
+		FirstName: vkUser.User.FirstName,
+		LastName:  vkUser.User.LastName,
+		Photo:     vkUser.User.Avatar,
+	}
+
 	// Ищем или создаём пользователя
-	user, err := h.findOrCreateVKUser(vkUser.Response[0])
+	user, err := h.findOrCreateVKUser(vkUserData)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
