@@ -152,7 +152,7 @@ const Login = () => {
             redirectUrl: `${window.location.origin}/api/auth/vk/callback`,
             responseMode: VKID.ConfigResponseMode.Callback,
             source: VKID.ConfigSource.LOWCODE,
-            scope: "",
+            scope: "vkid.personal_info",
           });
 
           const oneTap = new VKID.OneTap();
@@ -193,7 +193,7 @@ const Login = () => {
           redirectUrl: `${window.location.origin}/api/auth/vk/callback`,
           responseMode: VKID.ConfigResponseMode.Callback,
           source: VKID.ConfigSource.LOWCODE,
-          scope: "",
+          scope: "vkid.personal_info",
         });
 
         const oneTap = new VKID.OneTap();
