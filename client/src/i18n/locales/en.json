@@ -142,6 +142,8 @@
     "successSaved": "Profile successfully saved!",
     "errorSaving": "Error saving profile",
     "errorLoading": "Error loading profile",
+    "name": "Name",
+    "namePlaceholder": "For example: John Doe",
     "phone": "Phone",
     "about": "About",
     "aboutPlaceholder": "Tell us a bit about yourself...",

@@ -12,6 +12,7 @@ import (
 
 // ProfileRequest - структура для обновления профиля
 type ProfileRequest struct {
+	Name  *string `json:"name"`
 	Phone *string `json:"phone"`
 	About *string `json:"about"`
 
@@ -37,6 +38,7 @@ type ProfileRequest struct {
 type ProfileResponse struct {
 	ID     uuid.UUID `json:"id"`
 	UserID uuid.UUID `json:"user_id"`
+	Name   string    `json:"name"`
 	Phone  *string   `json:"phone"`
 	About  *string   `json:"about"`
 
@@ -62,13 +64,21 @@ type ProfileResponse struct {
 func (h *Handler) GetProfile(c *gin.Context) {
 	userID := c.GetString("userID")
 
+	// Получаем пользователя
+	var user models.User
+	if err := h.DB.First(&user, "id = ?", userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
 	var profile models.UserProfile
 	result := h.DB.Where("user_id = ?", userID).First(&profile)
 
-	// Если профиль не найден, возвращаем пустой профиль
+	// Если профиль не найден, возвращаем только имя пользователя
 	if result.Error != nil {
 		c.JSON(http.StatusOK, ProfileResponse{
 			UserID: uuid.MustParse(userID),
+			Name:   user.Name,
 		})
 		return
 	}
@@ -76,6 +86,7 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, ProfileResponse{
 		ID:             profile.ID,
 		UserID:         profile.UserID,
+		Name:           user.Name,
 		Phone:          profile.Phone,
 		About:          profile.About,
 		AddressLine1:   profile.AddressLine1,
@@ -101,6 +112,27 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Получаем пользователя
+	var user models.User
+	if err := h.DB.First(&user, "id = ?", userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Обновляем имя пользователя, если передано
+	if req.Name != nil && *req.Name != "" {
+		sanitizedName := validator.SanitizeString(*req.Name)
+		if len(sanitizedName) > validator.MaxNameLength {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Name is too long"})
+			return
+		}
+		user.Name = sanitizedName
+		if err := h.DB.Save(&user).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user name"})
+			return
+		}
 	}
 
 	// Валидируем данные профиля
@@ -230,6 +262,7 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, ProfileResponse{
 		ID:             profile.ID,
 		UserID:         profile.UserID,
+		Name:           user.Name,
 		Phone:          profile.Phone,
 		About:          profile.About,
 		AddressLine1:   profile.AddressLine1,

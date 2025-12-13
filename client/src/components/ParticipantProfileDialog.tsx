@@ -28,6 +28,16 @@ import {
 
 const getProfileSchema = (t: (key: string, params?: any) => string) =>
   z.object({
+    name: z
+      .string()
+      .min(1, t("validation.required"))
+      .max(300, t("validation.maxChars", { count: 300 }))
+      .optional()
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     phone: z
       .string()
       .optional()
@@ -42,7 +52,10 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       ),
     about: z
       .string()
-      .max(MAX_ABOUT_LENGTH, t("validation.maxChars", { count: MAX_ABOUT_LENGTH }))
+      .max(
+        MAX_ABOUT_LENGTH,
+        t("validation.maxChars", { count: MAX_ABOUT_LENGTH })
+      )
       .optional()
       .nullable()
       .refine(
@@ -51,7 +64,10 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       ),
     address_line1: z
       .string()
-      .max(MAX_ADDRESS_LENGTH, t("validation.maxChars", { count: MAX_ADDRESS_LENGTH }))
+      .max(
+        MAX_ADDRESS_LENGTH,
+        t("validation.maxChars", { count: MAX_ADDRESS_LENGTH })
+      )
       .optional()
       .nullable()
       .refine(
@@ -60,7 +76,10 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       ),
     address_line2: z
       .string()
-      .max(MAX_ADDRESS_LENGTH, t("validation.maxChars", { count: MAX_ADDRESS_LENGTH }))
+      .max(
+        MAX_ADDRESS_LENGTH,
+        t("validation.maxChars", { count: MAX_ADDRESS_LENGTH })
+      )
       .optional()
       .nullable()
       .refine(
@@ -69,7 +88,10 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       ),
     city: z
       .string()
-      .max(MAX_CITY_LENGTH, t("validation.maxChars", { count: MAX_CITY_LENGTH }))
+      .max(
+        MAX_CITY_LENGTH,
+        t("validation.maxChars", { count: MAX_CITY_LENGTH })
+      )
       .optional()
       .nullable()
       .refine(
@@ -78,7 +100,10 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       ),
     region: z
       .string()
-      .max(MAX_REGION_LENGTH, t("validation.maxChars", { count: MAX_REGION_LENGTH }))
+      .max(
+        MAX_REGION_LENGTH,
+        t("validation.maxChars", { count: MAX_REGION_LENGTH })
+      )
       .optional()
       .nullable()
       .refine(
@@ -90,14 +115,14 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       .max(20, t("validation.maxChars", { count: 20 }))
       .optional()
       .nullable()
-      .refine(
-        (val) => !val || !validatePostalCode(val),
-        "Invalid postal code"
-      ),
+      .refine((val) => !val || !validatePostalCode(val), "Invalid postal code"),
     country: z.string().optional().nullable(),
     address_line1_en: z
       .string()
-      .max(MAX_ADDRESS_LENGTH, t("validation.maxChars", { count: MAX_ADDRESS_LENGTH }))
+      .max(
+        MAX_ADDRESS_LENGTH,
+        t("validation.maxChars", { count: MAX_ADDRESS_LENGTH })
+      )
       .optional()
       .nullable()
       .refine(
@@ -106,7 +131,10 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       ),
     address_line2_en: z
       .string()
-      .max(MAX_ADDRESS_LENGTH, t("validation.maxChars", { count: MAX_ADDRESS_LENGTH }))
+      .max(
+        MAX_ADDRESS_LENGTH,
+        t("validation.maxChars", { count: MAX_ADDRESS_LENGTH })
+      )
       .optional()
       .nullable()
       .refine(
@@ -115,7 +143,10 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       ),
     city_en: z
       .string()
-      .max(MAX_CITY_LENGTH, t("validation.maxChars", { count: MAX_CITY_LENGTH }))
+      .max(
+        MAX_CITY_LENGTH,
+        t("validation.maxChars", { count: MAX_CITY_LENGTH })
+      )
       .optional()
       .nullable()
       .refine(
@@ -124,7 +155,10 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       ),
     region_en: z
       .string()
-      .max(MAX_REGION_LENGTH, t("validation.maxChars", { count: MAX_REGION_LENGTH }))
+      .max(
+        MAX_REGION_LENGTH,
+        t("validation.maxChars", { count: MAX_REGION_LENGTH })
+      )
       .optional()
       .nullable()
       .refine(
@@ -133,7 +167,10 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       ),
     wishlist: z
       .string()
-      .max(MAX_WISHLIST_LENGTH, t("validation.maxChars", { count: MAX_WISHLIST_LENGTH }))
+      .max(
+        MAX_WISHLIST_LENGTH,
+        t("validation.maxChars", { count: MAX_WISHLIST_LENGTH })
+      )
       .optional()
       .nullable()
       .refine(
@@ -142,7 +179,10 @@ const getProfileSchema = (t: (key: string, params?: any) => string) =>
       ),
     anti_wishlist: z
       .string()
-      .max(MAX_WISHLIST_LENGTH, t("validation.maxChars", { count: MAX_WISHLIST_LENGTH }))
+      .max(
+        MAX_WISHLIST_LENGTH,
+        t("validation.maxChars", { count: MAX_WISHLIST_LENGTH })
+      )
       .optional()
       .nullable()
       .refine(

@@ -37,6 +37,16 @@ import {
 
 const getProfileSchema = (t: (key: string, params?: any) => string) =>
   z.object({
+    name: z
+      .string()
+      .min(1, t("validation.required"))
+      .max(300, t("validation.maxChars", { count: 300 }))
+      .optional()
+      .nullable()
+      .refine(
+        (val) => !val || !containsDangerousContent(val),
+        "Contains prohibited content"
+      ),
     phone: z
       .string()
       .optional()
@@ -225,6 +235,7 @@ export default function Profile() {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(getProfileSchema(t)),
     defaultValues: {
+      name: "",
       phone: "",
       about: "",
       address_line1: "",
@@ -245,6 +256,7 @@ export default function Profile() {
   useEffect(() => {
     if (profile) {
       reset({
+        name: profile.name || "",
         phone: profile.phone || "",
         about: profile.about || "",
         address_line1: profile.address_line1 || "",

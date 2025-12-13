@@ -19,6 +19,7 @@ import transliterate from "@sindresorhus/transliterate";
 import { getCountryFlagComponent } from "../utils/countries";
 
 export interface ProfileFormData {
+  name?: string | null;
   phone?: string | null;
   about?: string | null;
   address_line1?: string | null;
@@ -161,6 +162,16 @@ export const ProfileFormFields = ({
           />
         </Alert>
       )}
+
+      {/* Имя */}
+      <TextField
+        label={t("profile.name")}
+        placeholder={t("profile.namePlaceholder")}
+        fullWidth
+        {...register("name")}
+        error={!!errors.name}
+        helperText={errors.name?.message}
+      />
 
       {/* Телефон */}
       <Controller

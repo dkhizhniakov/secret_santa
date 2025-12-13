@@ -142,6 +142,8 @@
     "successSaved": "¡Perfil guardado correctamente!",
     "errorSaving": "Error al guardar el perfil",
     "errorLoading": "Error al cargar el perfil",
+    "name": "Nombre",
+    "namePlaceholder": "Por ejemplo: Juan Pérez",
     "phone": "Teléfono",
     "about": "Sobre mí",
     "aboutPlaceholder": "Cuéntanos un poco sobre ti...",

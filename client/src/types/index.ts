@@ -12,6 +12,7 @@ export interface AuthResponse {
 export interface UserProfile {
   id?: string;
   user_id: string;
+  name?: string;
   phone?: string | null;
   about?: string | null;
   
@@ -34,6 +35,7 @@ export interface UserProfile {
 }
 
 export interface UpdateProfileRequest {
+  name?: string | null;
   phone?: string | null;
   about?: string | null;
   
