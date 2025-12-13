@@ -1,12 +1,12 @@
 // Максимальные длины полей (соответствуют серверным)
-export const MAX_MESSAGE_LENGTH = 2000;
+export const MAX_MESSAGE_LENGTH = 5000;
 export const MAX_PHONE_LENGTH = 30;
 export const MAX_ADDRESS_LENGTH = 200;
 export const MAX_CITY_LENGTH = 100;
 export const MAX_REGION_LENGTH = 100;
 export const MAX_POSTAL_CODE_LENGTH = 20;
-export const MAX_WISHLIST_LENGTH = 1000;
-export const MAX_ABOUT_LENGTH = 500;
+export const MAX_WISHLIST_LENGTH = 5000;
+export const MAX_ABOUT_LENGTH = 5000;
 
 // Опасные паттерны для SQL/NoSQL injection и XSS
 const DANGEROUS_PATTERNS = [
@@ -15,8 +15,8 @@ const DANGEROUS_PATTERNS = [
   // XSS
   /(<script|<iframe|<object|<embed|javascript:)/i,
   /<img[^>]*onerror/i,
-  // Command injection
-  /[;&|`$()]/,
+  // Command injection (скобки ( ) разрешены)
+  /[;&|`$]/,
 ];
 
 /**

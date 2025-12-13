@@ -9,7 +9,7 @@ import (
 
 // Максимальные длины полей
 const (
-	MaxMessageLength     = 2000
+	MaxMessageLength     = 5000
 	MaxNameLength        = 100
 	MaxPhoneLength       = 30
 	MaxAddressLength     = 200
@@ -17,8 +17,8 @@ const (
 	MaxRegionLength      = 100
 	MaxPostalCodeLength  = 20
 	MaxCountryCodeLength = 2
-	MaxWishlistLength    = 1000
-	MaxAboutLength       = 500
+	MaxWishlistLength    = 5000
+	MaxAboutLength       = 5000
 )
 
 // Опасные паттерны для SQL/NoSQL injection
@@ -27,8 +27,8 @@ var dangerousPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)(union|select|insert|update|delete|drop|create|alter|exec|execute|script|javascript|<script)`),
 	// XSS
 	regexp.MustCompile(`(?i)(<script|<iframe|<object|<embed|<img.*onerror|javascript:)`),
-	// Command injection
-	regexp.MustCompile(`(?i)(;.*\||&&|\$\(|` + "`" + `)`),
+	// Command injection (скобки ( ) разрешены)
+	regexp.MustCompile(`(?i)(;.*\||&&|\$\{|` + "`" + `)`),
 }
 
 // SanitizeString очищает строку от опасных символов
