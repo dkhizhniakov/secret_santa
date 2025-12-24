@@ -28,7 +28,7 @@ var dangerousPatterns = []*regexp.Regexp{
 	// XSS
 	regexp.MustCompile(`(?i)(<script|<iframe|<object|<embed|<img.*onerror|javascript:)`),
 	// Command injection (скобки ( ) разрешены)
-	regexp.MustCompile(`(?i)(;.*\||&&|\$\{|` + "`" + `)`),
+	regexp.MustCompile(`(?i)(;.*\||\$\{|` + "`" + `)`),
 }
 
 // SanitizeString очищает строку от опасных символов

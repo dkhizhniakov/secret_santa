@@ -16,7 +16,7 @@ const DANGEROUS_PATTERNS = [
   /(<script|<iframe|<object|<embed|javascript:)/i,
   /<img[^>]*onerror/i,
   // Command injection (скобки ( ) разрешены)
-  /[;&|`$]/,
+  /[;|`$]/,
 ];
 
 /**
