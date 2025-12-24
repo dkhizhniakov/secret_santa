@@ -1,18 +1,28 @@
-import axios from 'axios';
-import { Raffle, User, Assignment, UserProfile, UpdateProfileRequest, ParticipantProfile, Giftee, Exclusion, CreateExclusionRequest } from '../types';
+import axios from "axios";
+import {
+  Raffle,
+  User,
+  Assignment,
+  UserProfile,
+  UpdateProfileRequest,
+  ParticipantProfile,
+  Giftee,
+  Exclusion,
+  CreateExclusionRequest,
+} from "../types";
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Add token to requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -24,8 +34,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      localStorage.removeItem("token");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }
@@ -33,39 +43,46 @@ api.interceptors.response.use(
 
 // Auth
 export const getMe = async (): Promise<User> => {
-  const { data } = await api.get<User>('/auth/me');
+  const { data } = await api.get<User>("/auth/me");
   return data;
 };
 
-export const telegramLogin = async (telegramData: any): Promise<{ token: string; user: User }> => {
-  const { data } = await api.post('/auth/telegram', telegramData);
+export const telegramLogin = async (
+  telegramData: any
+): Promise<{ token: string; user: User }> => {
+  const { data } = await api.post("/auth/telegram", telegramData);
   return data;
 };
 
-export const vkLogin = async (token: string, uuid: string): Promise<{ token: string; user: User }> => {
-  const { data } = await api.post('/auth/vk', { token, uuid });
+export const vkLogin = async (
+  token: string,
+  uuid: string
+): Promise<{ token: string; user: User }> => {
+  const { data } = await api.post("/auth/vk", { token, uuid });
   return data;
 };
 
 export const logout = async (): Promise<void> => {
-  await api.post('/auth/logout');
-  localStorage.removeItem('token');
+  await api.post("/auth/logout");
+  localStorage.removeItem("token");
 };
 
 // Profile
 export const getProfile = async (): Promise<UserProfile> => {
-  const { data } = await api.get<UserProfile>('/profile');
+  const { data } = await api.get<UserProfile>("/profile");
   return data;
 };
 
-export const updateProfile = async (profile: UpdateProfileRequest): Promise<UserProfile> => {
-  const { data } = await api.put<UserProfile>('/profile', profile);
+export const updateProfile = async (
+  profile: UpdateProfileRequest
+): Promise<UserProfile> => {
+  const { data } = await api.put<UserProfile>("/profile", profile);
   return data;
 };
 
 // Raffles
 export const getRaffles = async (): Promise<Raffle[]> => {
-  const { data } = await api.get<Raffle[]>('/raffles');
+  const { data } = await api.get<Raffle[]>("/raffles");
   return data;
 };
 
@@ -74,19 +91,25 @@ export const getRaffle = async (id: string): Promise<Raffle> => {
   return data;
 };
 
-export const createRaffle = async (raffle: { name: string; description?: string; avatarUrl?: string; budget?: string; eventDate?: string }): Promise<Raffle> => {
-  const { data } = await api.post<Raffle>('/raffles', raffle);
+export const createRaffle = async (raffle: {
+  name: string;
+  description?: string;
+  avatarUrl?: string;
+  budget?: string;
+  eventDate?: string;
+}): Promise<Raffle> => {
+  const { data } = await api.post<Raffle>("/raffles", raffle);
   return data;
 };
 
 // Upload avatar
 export const uploadAvatar = async (file: File): Promise<{ url: string }> => {
   const formData = new FormData();
-  formData.append('avatar', file);
-  
-  const { data } = await api.post<{ url: string }>('/upload/avatar', formData, {
+  formData.append("avatar", file);
+
+  const { data } = await api.post<{ url: string }>("/upload/avatar", formData, {
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
   return data;
@@ -106,13 +129,29 @@ export const drawNames = async (id: string): Promise<Raffle> => {
   return data;
 };
 
-export const getMyAssignment = async (raffleId: string): Promise<Assignment> => {
-  const { data } = await api.get<Assignment>(`/raffles/${raffleId}/my-assignment`);
+export const getMyAssignment = async (
+  raffleId: string
+): Promise<Assignment> => {
+  const { data } = await api.get<Assignment>(
+    `/raffles/${raffleId}/my-assignment`
+  );
   return data;
 };
 
 // Participant profile in raffle
-export const updateMyRaffleProfile = async (raffleId: string, profile: ParticipantProfile): Promise<void> => {
+export const getMyRaffleProfile = async (
+  raffleId: string
+): Promise<ParticipantProfile> => {
+  const { data } = await api.get<ParticipantProfile>(
+    `/raffles/${raffleId}/my-profile`
+  );
+  return data;
+};
+
+export const updateMyRaffleProfile = async (
+  raffleId: string,
+  profile: ParticipantProfile
+): Promise<void> => {
   await api.put(`/raffles/${raffleId}/my-profile`, profile);
 };
 
@@ -123,16 +162,27 @@ export const getMyGiftee = async (raffleId: string): Promise<Giftee> => {
 
 // Exclusions
 export const getExclusions = async (raffleId: string): Promise<Exclusion[]> => {
-  const { data } = await api.get<Exclusion[]>(`/raffles/${raffleId}/exclusions`);
+  const { data } = await api.get<Exclusion[]>(
+    `/raffles/${raffleId}/exclusions`
+  );
   return data;
 };
 
-export const createExclusion = async (raffleId: string, exclusion: CreateExclusionRequest): Promise<Exclusion> => {
-  const { data } = await api.post<Exclusion>(`/raffles/${raffleId}/exclusions`, exclusion);
+export const createExclusion = async (
+  raffleId: string,
+  exclusion: CreateExclusionRequest
+): Promise<Exclusion> => {
+  const { data } = await api.post<Exclusion>(
+    `/raffles/${raffleId}/exclusions`,
+    exclusion
+  );
   return data;
 };
 
-export const deleteExclusion = async (raffleId: string, exclusionId: string): Promise<void> => {
+export const deleteExclusion = async (
+  raffleId: string,
+  exclusionId: string
+): Promise<void> => {
   await api.delete(`/raffles/${raffleId}/exclusions/${exclusionId}`);
 };
 
@@ -147,17 +197,31 @@ export interface ChatMessage {
   created_at: string;
 }
 
-export const getChatWithGiftee = async (raffleId: string): Promise<ChatMessage[]> => {
-  const { data } = await api.get<ChatMessage[]>(`/raffles/${raffleId}/chat/giftee`);
+export const getChatWithGiftee = async (
+  raffleId: string
+): Promise<ChatMessage[]> => {
+  const { data } = await api.get<ChatMessage[]>(
+    `/raffles/${raffleId}/chat/giftee`
+  );
   return data;
 };
 
-export const getChatWithSanta = async (raffleId: string): Promise<ChatMessage[]> => {
-  const { data } = await api.get<ChatMessage[]>(`/raffles/${raffleId}/chat/santa`);
+export const getChatWithSanta = async (
+  raffleId: string
+): Promise<ChatMessage[]> => {
+  const { data } = await api.get<ChatMessage[]>(
+    `/raffles/${raffleId}/chat/santa`
+  );
   return data;
 };
 
-export const getUnreadCount = async (raffleId: string): Promise<{ unread_from_giftee: number; unread_from_santa: number; total: number }> => {
+export const getUnreadCount = async (
+  raffleId: string
+): Promise<{
+  unread_from_giftee: number;
+  unread_from_santa: number;
+  total: number;
+}> => {
   const { data } = await api.get(`/raffles/${raffleId}/chat/unread`);
   return data;
 };

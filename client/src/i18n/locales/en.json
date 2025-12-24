@@ -127,6 +127,9 @@
     "fillProfile": "Fill Profile",
     "fillMyProfile": "Fill My Profile",
     "profileUpdated": "Profile successfully updated!",
+    "canEditProfile": "You can edit your profile until the draw is conducted.",
+    "canEditProfileAfterDraw": "You can update your profile (e.g., clarify address) for your Secret Santa.",
+    "editProfile": "Edit Profile",
     "chatHint": "Now you can chat anonymously! Click the chat button in the bottom right corner."
   },
   "participantProfile": {

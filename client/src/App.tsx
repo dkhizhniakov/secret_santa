@@ -24,8 +24,9 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   }
   
   if (!isAuthenticated) {
-    // Сохраняем текущий URL для возврата после логина
-    sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
+    // Сохраняем текущий URL для возврата после логина (включая путь и параметры)
+    const currentPath = window.location.pathname + window.location.search;
+    sessionStorage.setItem('redirectAfterLogin', currentPath);
     return <Navigate to="/login" />;
   }
   

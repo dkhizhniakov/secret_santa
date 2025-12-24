@@ -129,6 +129,7 @@ func main() {
 			protected.GET("/raffles/:id/my-assignment", h.GetMyAssignment)
 
 			// Participant profile in raffle
+			protected.GET("/raffles/:id/my-profile", h.GetMyProfile)
 			protected.PUT("/raffles/:id/my-profile", h.UpdateMyProfile)
 			protected.GET("/raffles/:id/my-giftee", h.GetMyGiftee)
 

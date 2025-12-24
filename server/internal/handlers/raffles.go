@@ -63,6 +63,25 @@ type ParticipantProfileRequest struct {
 	AntiWishlist   *string `json:"anti_wishlist"`
 }
 
+// Ответ с профилем участника
+type ParticipantProfileResponse struct {
+	Name           string  `json:"name"`
+	Phone          *string `json:"phone"`
+	About          *string `json:"about"`
+	AddressLine1   *string `json:"address_line1"`
+	AddressLine2   *string `json:"address_line2"`
+	City           *string `json:"city"`
+	Region         *string `json:"region"`
+	PostalCode     *string `json:"postal_code"`
+	Country        *string `json:"country"`
+	AddressLine1En *string `json:"address_line1_en"`
+	AddressLine2En *string `json:"address_line2_en"`
+	CityEn         *string `json:"city_en"`
+	RegionEn       *string `json:"region_en"`
+	Wishlist       *string `json:"wishlist"`
+	AntiWishlist   *string `json:"anti_wishlist"`
+}
+
 // Полная информация о получателе подарка
 type GifteeResponse struct {
 	ID             string  `json:"id"`
@@ -260,7 +279,10 @@ func (h *Handler) JoinRaffle(c *gin.Context) {
 	// Check if already member
 	var existingMember models.Member
 	if err := h.DB.Where("group_id = ? AND user_id = ?", group.ID, uid).First(&existingMember).Error; err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "You are already a member"})
+		c.JSON(http.StatusConflict, gin.H{
+			"error":     "You are already a member",
+			"raffle_id": group.ID.String(),
+		})
 		return
 	}
 
@@ -463,6 +485,45 @@ func (h *Handler) raffleToResponse(g models.Group, currentUserID uuid.UUID) Raff
 		Members:     members,
 		CreatedAt:   g.CreatedAt.Format(time.RFC3339),
 	}
+}
+
+// GetMyProfile - получить свой профиль в конкретном розыгрыше
+func (h *Handler) GetMyProfile(c *gin.Context) {
+	userID := c.GetString("userID")
+	uid, _ := uuid.Parse(userID)
+	raffleID := c.Param("id")
+	rid, err := uuid.Parse(raffleID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid raffle ID"})
+		return
+	}
+
+	// Найти участника
+	var member models.Member
+	if err := h.DB.Preload("User").Where("group_id = ? AND user_id = ?", rid, uid).First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "You are not a member of this raffle"})
+		return
+	}
+
+	response := ParticipantProfileResponse{
+		Name:           member.User.Name,
+		Phone:          member.Phone,
+		About:          member.About,
+		AddressLine1:   member.AddressLine1,
+		AddressLine2:   member.AddressLine2,
+		City:           member.City,
+		Region:         member.Region,
+		PostalCode:     member.PostalCode,
+		Country:        member.Country,
+		AddressLine1En: member.AddressLine1En,
+		AddressLine2En: member.AddressLine2En,
+		CityEn:         member.CityEn,
+		RegionEn:       member.RegionEn,
+		Wishlist:       member.Wishlist,
+		AntiWishlist:   member.AntiWishlist,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // UpdateMyProfile - обновить профиль участника в конкретном розыгрыше

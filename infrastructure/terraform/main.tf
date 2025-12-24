@@ -210,6 +210,15 @@ resource "aws_security_group" "rds" {
     description     = "PostgreSQL from EC2"
   }
 
+  # ВРЕМЕННО: Глобальный доступ для отладки
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "TEMPORARY: Global access for debugging"
+  }
+
   tags = {
     Name    = "${var.project_name}-rds-sg"
     Project = var.project_name
@@ -325,7 +334,7 @@ resource "aws_db_instance" "postgres" {
   # Networking
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]
-  publicly_accessible    = false
+  publicly_accessible    = true  # ВРЕМЕННО: для отладки с локального компьютера
 
   # Backups
   backup_retention_period = 7

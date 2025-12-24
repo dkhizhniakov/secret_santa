@@ -104,8 +104,15 @@ func (h *Handler) getGoogleOAuthConfig() *oauth2.Config {
 func (h *Handler) GoogleLogin(c *gin.Context) {
 	config := h.getGoogleOAuthConfig()
 
-	// Генерируем state для защиты от CSRF
+	// Получаем redirect URL из query параметра
+	redirectAfterLogin := c.Query("redirect")
+
+	// Генерируем state для защиты от CSRF (включаем redirect URL если есть)
 	state := uuid.New().String()
+	if redirectAfterLogin != "" {
+		// Добавляем redirect к state через разделитель
+		state = state + "|" + redirectAfterLogin
+	}
 
 	// Сохраняем state в httpOnly cookie на 5 минут
 	secure := h.cfg.Env == "production"
@@ -130,7 +137,22 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
 	// Проверяем state для защиты от CSRF
 	receivedState := c.Query("state")
 	savedState, err := c.Cookie("oauth_state")
-	if err != nil || receivedState != savedState {
+	if err != nil || receivedState == "" {
+		c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/login?error=invalid_state")
+		return
+	}
+
+	// Извлекаем UUID и redirect URL из state
+	stateParts := strings.Split(savedState, "|")
+	stateUUID := stateParts[0]
+	var redirectAfterLogin string
+	if len(stateParts) > 1 {
+		redirectAfterLogin = stateParts[1]
+	}
+
+	// Проверяем что UUID совпадает
+	receivedStateParts := strings.Split(receivedState, "|")
+	if receivedStateParts[0] != stateUUID {
 		c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/login?error=invalid_state")
 		return
 	}
@@ -182,8 +204,12 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	// Редирект на frontend с токеном
-	c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/auth/callback?token="+jwtToken)
+	// Редирект на frontend с токеном и redirect URL
+	callbackURL := h.cfg.BaseURL + "/auth/callback?token=" + jwtToken
+	if redirectAfterLogin != "" {
+		callbackURL += "&redirect=" + url.QueryEscape(redirectAfterLogin)
+	}
+	c.Redirect(http.StatusTemporaryRedirect, callbackURL)
 }
 
 func (h *Handler) findOrCreateGoogleUser(googleUser GoogleUserInfo) (*models.User, error) {
@@ -363,8 +389,15 @@ func (h *Handler) getYandexOAuthConfig() *oauth2.Config {
 func (h *Handler) YandexLogin(c *gin.Context) {
 	config := h.getYandexOAuthConfig()
 
-	// Генерируем state для защиты от CSRF
+	// Получаем redirect URL из query параметра
+	redirectAfterLogin := c.Query("redirect")
+
+	// Генерируем state для защиты от CSRF (включаем redirect URL если есть)
 	state := uuid.New().String()
+	if redirectAfterLogin != "" {
+		// Добавляем redirect к state через разделитель
+		state = state + "|" + redirectAfterLogin
+	}
 
 	// Сохраняем state в httpOnly cookie на 5 минут
 	secure := h.cfg.Env == "production"
@@ -389,7 +422,22 @@ func (h *Handler) YandexCallback(c *gin.Context) {
 	// Проверяем state для защиты от CSRF
 	receivedState := c.Query("state")
 	savedState, err := c.Cookie("oauth_state_yandex")
-	if err != nil || receivedState != savedState {
+	if err != nil || receivedState == "" {
+		c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/login?error=invalid_state")
+		return
+	}
+
+	// Извлекаем UUID и redirect URL из state
+	stateParts := strings.Split(savedState, "|")
+	stateUUID := stateParts[0]
+	var redirectAfterLogin string
+	if len(stateParts) > 1 {
+		redirectAfterLogin = stateParts[1]
+	}
+
+	// Проверяем что UUID совпадает
+	receivedStateParts := strings.Split(receivedState, "|")
+	if receivedStateParts[0] != stateUUID {
 		c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/login?error=invalid_state")
 		return
 	}
@@ -441,8 +489,12 @@ func (h *Handler) YandexCallback(c *gin.Context) {
 		return
 	}
 
-	// Редирект на frontend с токеном
-	c.Redirect(http.StatusTemporaryRedirect, h.cfg.BaseURL+"/auth/callback?token="+jwtToken)
+	// Редирект на frontend с токеном и redirect URL
+	callbackURL := h.cfg.BaseURL + "/auth/callback?token=" + jwtToken
+	if redirectAfterLogin != "" {
+		callbackURL += "&redirect=" + url.QueryEscape(redirectAfterLogin)
+	}
+	c.Redirect(http.StatusTemporaryRedirect, callbackURL)
 }
 
 func (h *Handler) findOrCreateYandexUser(yandexUser YandexUserInfo) (*models.User, error) {

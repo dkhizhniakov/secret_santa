@@ -127,6 +127,9 @@
     "fillProfile": "Completar Perfil",
     "fillMyProfile": "Completar Mi Perfil",
     "profileUpdated": "¡Perfil actualizado con éxito!",
+    "canEditProfile": "Puedes editar tu perfil hasta que se realice el sorteo.",
+    "canEditProfileAfterDraw": "Puedes actualizar tu perfil (por ejemplo, aclarar la dirección) para tu Amigo Invisible.",
+    "editProfile": "Editar Perfil",
     "chatHint": "¡Ahora puedes chatear de forma anónima! Haz clic en el botón de chat en la esquina inferior derecha."
   },
   "participantProfile": {

@@ -55,6 +55,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (profile) {
       setUserProfile({
+        name: profile.name,
         phone: profile.phone,
         about: profile.about,
         address_line1: profile.address_line1,

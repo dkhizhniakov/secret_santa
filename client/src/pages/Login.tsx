@@ -234,7 +234,10 @@ const Login = () => {
   }, [isAuthenticated, navigate]);
 
   const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/google`;
+    // Передаем redirect URL в query параметре для OAuth
+    const redirectUrl = sessionStorage.getItem("redirectAfterLogin");
+    const stateParam = redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : '';
+    window.location.href = `${API_URL}/auth/google${stateParam}`;
   };
 
   // const handleYandexLogin = () => {

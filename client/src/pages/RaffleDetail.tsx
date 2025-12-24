@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -45,9 +45,6 @@ const RaffleDetail = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [chatHintOpen, setChatHintOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState<ParticipantProfile | null>(
-    null
-  );
 
   const { data: raffle, isLoading } = useQuery({
     queryKey: ["raffle", id],
@@ -67,33 +64,15 @@ const RaffleDetail = () => {
     queryFn: api.getMe,
   });
 
-  // Загрузить профиль пользователя
-  const { data: profile } = useQuery({
-    queryKey: ["profile"],
-    queryFn: api.getProfile,
+  // Загружаем профиль участника из рафла (если пользователь является участником)
+  const { data: memberProfile } = useQuery({
+    queryKey: ["raffleProfile", id],
+    queryFn: () => api.getMyRaffleProfile(id!),
+    enabled: !!id && !!raffle && !!currentUser,
     retry: false,
   });
 
-  useEffect(() => {
-    if (profile) {
-      setUserProfile({
-        phone: profile.phone,
-        about: profile.about,
-        address_line1: profile.address_line1,
-        address_line2: profile.address_line2,
-        city: profile.city,
-        region: profile.region,
-        postal_code: profile.postal_code,
-        country: profile.country,
-        address_line1_en: profile.address_line1_en,
-        address_line2_en: profile.address_line2_en,
-        city_en: profile.city_en,
-        region_en: profile.region_en,
-        wishlist: profile.wishlist,
-        anti_wishlist: profile.anti_wishlist,
-      });
-    }
-  }, [profile]);
+  const userProfileData: ParticipantProfile | undefined = memberProfile;
 
   const drawMutation = useMutation({
     mutationFn: () => api.drawNames(id!),
@@ -137,8 +116,9 @@ const RaffleDetail = () => {
 
   const handleProfileDialogClose = () => {
     setProfileDialogOpen(false);
+    // Обновляем данные рафла и профиль участника
     queryClient.invalidateQueries({ queryKey: ["raffle", id] });
-    queryClient.invalidateQueries({ queryKey: ["profile"] }); // Обновляем кэш глобального профиля
+    queryClient.invalidateQueries({ queryKey: ["raffleProfile", id] });
     showSnackbar(t("raffleDetail.profileUpdated"));
   };
 
@@ -280,37 +260,107 @@ const RaffleDetail = () => {
                 )}
               </Box>
 
-              {raffle.isOwner && !raffle.isDrawn && currentUser && (
+              {raffle.isOwner && currentUser && (
                 <>
-                  {/* Проверка минимального количества участников */}
-                  {raffle.members.length < 3 && (
+                  {/* До жеребьёвки */}
+                  {!raffle.isDrawn && (
+                    <>
+                      {/* Проверка минимального количества участников */}
+                      {raffle.members.length < 3 && (
+                        <Alert severity="info" sx={{ mt: 2 }}>
+                          {t("raffleDetail.needMoreParticipants", {
+                            current: raffle.members.length,
+                            needed: 3,
+                          })}
+                        </Alert>
+                      )}
+
+                      {/* Проверка заполненности профилей */}
+                      {raffle.members.length >= 3 &&
+                        !raffle.members.every((m) => m.isProfileFilled) && (
+                          <Alert severity="warning" sx={{ mt: 2 }}>
+                            {t("raffleDetail.profilesNotFilled")}
+                            {/* Если сам организатор не заполнил профиль */}
+                            {raffle.members.find(
+                              (m) => m.userId === currentUser.id
+                            )?.isProfileFilled === false && (
+                              <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => setProfileDialogOpen(true)}
+                                sx={{ ml: 2 }}
+                              >
+                                {t("raffleDetail.fillMyProfile")}
+                              </Button>
+                            )}
+                          </Alert>
+                        )}
+
+                      {/* Сообщение что можно изменить профиль для организатора */}
+                      {raffle.members.find((m) => m.userId === currentUser.id)
+                        ?.isProfileFilled === true && (
+                        <Alert severity="info" sx={{ mt: 2 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                              gap: 1,
+                            }}
+                          >
+                            <Typography variant="body2">
+                              {t(
+                                "raffleDetail.canEditProfile",
+                                "Вы можете изменить свой профиль до проведения жеребьёвки."
+                              )}
+                            </Typography>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => setProfileDialogOpen(true)}
+                            >
+                              {t(
+                                "raffleDetail.editProfile",
+                                "Изменить профиль"
+                              )}
+                            </Button>
+                          </Box>
+                        </Alert>
+                      )}
+                    </>
+                  )}
+
+                  {/* После жеребьёвки */}
+                  {raffle.isDrawn && (
                     <Alert severity="info" sx={{ mt: 2 }}>
-                      {t("raffleDetail.needMoreParticipants", {
-                        current: raffle.members.length,
-                        needed: 3,
-                      })}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          gap: 1,
+                        }}
+                      >
+                        <Typography variant="body2">
+                          {t(
+                            "raffleDetail.canEditProfileAfterDraw",
+                            "Вы можете обновить свой профиль (например, уточнить адрес) для вашего Тайного Санты."
+                          )}
+                        </Typography>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => setProfileDialogOpen(true)}
+                        >
+                          {t("raffleDetail.editProfile", "Изменить профиль")}
+                        </Button>
+                      </Box>
                     </Alert>
                   )}
 
-                  {/* Проверка заполненности профилей */}
-                  {raffle.members.length >= 3 &&
-                    !raffle.members.every((m) => m.isProfileFilled) && (
-                      <Alert severity="warning" sx={{ mt: 2 }}>
-                        {t("raffleDetail.profilesNotFilled")}
-                        {/* Если сам организатор не заполнил профиль */}
-                        {raffle.members.find((m) => m.userId === currentUser.id)
-                          ?.isProfileFilled === false && (
-                          <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => setProfileDialogOpen(true)}
-                            sx={{ ml: 2 }}
-                          >
-                            {t("raffleDetail.fillMyProfile")}
-                          </Button>
-                        )}
-                      </Alert>
-                    )}
+                  {/* Кнопки управления */}
                   <Box
                     sx={{
                       display: "flex",
@@ -323,49 +373,55 @@ const RaffleDetail = () => {
                       },
                     }}
                   >
-                    <Button
-                      variant="contained"
-                      startIcon={
-                        <Shuffle
-                          sx={{ display: { xs: "none", sm: "block" } }}
-                        />
-                      }
-                      onClick={() => drawMutation.mutate()}
-                      disabled={
-                        raffle.members.length < 3 ||
-                        drawMutation.isPending ||
-                        !raffle.members.every((m) => m.isProfileFilled)
-                      }
-                      sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-                    >
-                      {drawMutation.isPending
-                        ? t("raffleDetail.drawing")
-                        : t("raffleDetail.drawButton")}
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      startIcon={
-                        <ContentCopy
-                          sx={{ display: { xs: "none", sm: "block" } }}
-                        />
-                      }
-                      onClick={handleCopyInviteCode}
-                      sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-                    >
-                      {t("raffleDetail.copyCode")}
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      startIcon={
-                        <ContentCopy
-                          sx={{ display: { xs: "none", sm: "block" } }}
-                        />
-                      }
-                      onClick={handleCopyInviteLink}
-                      sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-                    >
-                      {t("raffleDetail.copyLink")}
-                    </Button>
+                    {!raffle.isDrawn && (
+                      <Button
+                        variant="contained"
+                        startIcon={
+                          <Shuffle
+                            sx={{ display: { xs: "none", sm: "block" } }}
+                          />
+                        }
+                        onClick={() => drawMutation.mutate()}
+                        disabled={
+                          raffle.members.length < 3 ||
+                          drawMutation.isPending ||
+                          !raffle.members.every((m) => m.isProfileFilled)
+                        }
+                        sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+                      >
+                        {drawMutation.isPending
+                          ? t("raffleDetail.drawing")
+                          : t("raffleDetail.drawButton")}
+                      </Button>
+                    )}
+                    {!raffle.isDrawn && (
+                      <>
+                        <Button
+                          variant="outlined"
+                          startIcon={
+                            <ContentCopy
+                              sx={{ display: { xs: "none", sm: "block" } }}
+                            />
+                          }
+                          onClick={handleCopyInviteCode}
+                          sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+                        >
+                          {t("raffleDetail.copyCode")}
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          startIcon={
+                            <ContentCopy
+                              sx={{ display: { xs: "none", sm: "block" } }}
+                            />
+                          }
+                          onClick={handleCopyInviteLink}
+                          sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+                        >
+                          {t("raffleDetail.copyLink")}
+                        </Button>
+                      </>
+                    )}
                     <Button
                       variant="outlined"
                       color="error"
@@ -381,12 +437,72 @@ const RaffleDetail = () => {
                 </>
               )}
 
-              {!raffle.isOwner && raffle.isDrawn === false && currentUser && (
+              {!raffle.isOwner && currentUser && (
                 <>
-                  {/* Проверяем, заполнен ли профиль текущего пользователя */}
-                  {raffle.members.find((m) => m.userId === currentUser.id)
-                    ?.isProfileFilled === false && (
-                    <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+                  {/* До жеребьёвки */}
+                  {raffle.isDrawn === false && (
+                    <>
+                      {raffle.members.find((m) => m.userId === currentUser.id)
+                        ?.isProfileFilled === false ? (
+                        <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 1,
+                            }}
+                          >
+                            <Typography variant="body2">
+                              {t("raffleDetail.yourProfileNotFilled")}
+                            </Typography>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => setProfileDialogOpen(true)}
+                              sx={{ alignSelf: "flex-start" }}
+                            >
+                              {t("raffleDetail.fillProfile")}
+                            </Button>
+                          </Box>
+                        </Alert>
+                      ) : (
+                        <Alert severity="info" sx={{ mt: 2, mb: 2 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 1,
+                            }}
+                          >
+                            <Typography variant="body2">
+                              {t(
+                                "raffleDetail.canEditProfile",
+                                "Вы можете изменить свой профиль до проведения жеребьёвки."
+                              )}
+                            </Typography>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => setProfileDialogOpen(true)}
+                              sx={{ alignSelf: "flex-start" }}
+                            >
+                              {t(
+                                "raffleDetail.editProfile",
+                                "Изменить профиль"
+                              )}
+                            </Button>
+                          </Box>
+                        </Alert>
+                      )}
+                      <Alert severity="info" sx={{ mt: 2 }}>
+                        {t("raffleDetail.notDrawnYet")}
+                      </Alert>
+                    </>
+                  )}
+
+                  {/* После жеребьёвки */}
+                  {raffle.isDrawn === true && (
+                    <Alert severity="info" sx={{ mt: 2 }}>
                       <Box
                         sx={{
                           display: "flex",
@@ -395,22 +511,22 @@ const RaffleDetail = () => {
                         }}
                       >
                         <Typography variant="body2">
-                          {t("raffleDetail.yourProfileNotFilled")}
+                          {t(
+                            "raffleDetail.canEditProfileAfterDraw",
+                            "Вы можете обновить свой профиль (например, уточнить адрес) для вашего Тайного Санты."
+                          )}
                         </Typography>
                         <Button
-                          variant="contained"
+                          variant="outlined"
                           size="small"
                           onClick={() => setProfileDialogOpen(true)}
                           sx={{ alignSelf: "flex-start" }}
                         >
-                          {t("raffleDetail.fillProfile")}
+                          {t("raffleDetail.editProfile", "Изменить профиль")}
                         </Button>
                       </Box>
                     </Alert>
                   )}
-                  <Alert severity="info" sx={{ mt: 2 }}>
-                    {t("raffleDetail.notDrawnYet")}
-                  </Alert>
                 </>
               )}
             </Box>
@@ -522,10 +638,7 @@ const RaffleDetail = () => {
                         />
                       </Tooltip>
                     ) : (
-                      <Tooltip
-                        title={t("raffleDetail.profileNotFilled")}
-                        arrow
-                      >
+                      <Tooltip title={t("raffleDetail.profileNotFilled")} arrow>
                         <Warning
                           fontSize="small"
                           sx={{ color: "warning.main" }}
@@ -553,7 +666,9 @@ const RaffleDetail = () => {
       {raffle.isDrawn && currentUser && (
         <AnonymousChat
           raffleId={id!}
-          memberId={raffle.members.find((m) => m.userId === currentUser.id)?.id || ""}
+          memberId={
+            raffle.members.find((m) => m.userId === currentUser.id)?.id || ""
+          }
         />
       )}
 
@@ -591,7 +706,7 @@ const RaffleDetail = () => {
           onClose={handleProfileDialogClose}
           raffleId={id}
           isOrganizer={raffle?.isOwner}
-          initialData={userProfile || undefined}
+          initialData={userProfileData}
         />
       )}
 
@@ -608,15 +723,19 @@ const RaffleDetail = () => {
         open={chatHintOpen}
         autoHideDuration={8000}
         onClose={() => setChatHintOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         sx={{ mb: 10, mr: { xs: 0, sm: 2 } }}
       >
-        <Alert 
-          onClose={() => setChatHintOpen(false)} 
-          severity="success" 
-          sx={{ width: '100%' }}
+        <Alert
+          onClose={() => setChatHintOpen(false)}
+          severity="success"
+          sx={{ width: "100%" }}
         >
-          💬 {t("raffleDetail.chatHint", "Now you can chat anonymously! Click the chat button in the bottom right corner.")}
+          💬{" "}
+          {t(
+            "raffleDetail.chatHint",
+            "Now you can chat anonymously! Click the chat button in the bottom right corner."
+          )}
         </Alert>
       </Snackbar>
     </Box>
