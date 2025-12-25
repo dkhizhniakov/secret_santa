@@ -129,6 +129,13 @@ export const drawNames = async (id: string): Promise<Raffle> => {
   return data;
 };
 
+export const removeMember = async (
+  raffleId: string,
+  memberId: string
+): Promise<void> => {
+  await api.delete(`/raffles/${raffleId}/members/${memberId}`);
+};
+
 export const getMyAssignment = async (
   raffleId: string
 ): Promise<Assignment> => {

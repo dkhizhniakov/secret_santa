@@ -130,7 +130,12 @@
     "canEditProfile": "You can edit your profile until the draw is conducted.",
     "canEditProfileAfterDraw": "You can update your profile (e.g., clarify address) for your Secret Santa.",
     "editProfile": "Edit Profile",
-    "chatHint": "Now you can chat anonymously! Click the chat button in the bottom right corner."
+    "chatHint": "Now you can chat anonymously! Click the chat button in the bottom right corner.",
+    "removeMember": "Remove Participant",
+    "removeMemberTitle": "Remove Participant?",
+    "removeMemberText": "Are you sure you want to remove {{name}} from the raffle? All exclusions related to this participant will be automatically deleted.",
+    "removing": "Removing...",
+    "memberRemoved": "Participant successfully removed"
   },
   "participantProfile": {
     "title": "Your Raffle Profile",

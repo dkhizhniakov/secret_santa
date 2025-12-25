@@ -252,6 +252,67 @@ func (h *Handler) DeleteRaffle(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Group deleted"})
 }
 
+func (h *Handler) RemoveMember(c *gin.Context) {
+	userID := c.GetString("userID")
+	uid, _ := uuid.Parse(userID)
+
+	groupID := c.Param("id")
+	gid, err := uuid.Parse(groupID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
+
+	memberID := c.Param("memberId")
+	mid, err := uuid.Parse(memberID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid member ID"})
+		return
+	}
+
+	var group models.Group
+	if err := h.DB.First(&group, gid).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Group not found"})
+		return
+	}
+
+	// Only owner can remove members
+	if group.OwnerID != uid {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only owner can remove members"})
+		return
+	}
+
+	// Cannot remove members after draw
+	if group.IsDrawn {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot remove members after draw"})
+		return
+	}
+
+	// Find the member
+	var member models.Member
+	if err := h.DB.Where("id = ? AND group_id = ?", mid, gid).First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Member not found"})
+		return
+	}
+
+	// Cannot remove the owner
+	if member.UserID == group.OwnerID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot remove the owner"})
+		return
+	}
+
+	// Delete all exclusions related to this member
+	h.DB.Where("group_id = ? AND (participant_a = ? OR participant_b = ?)", gid, mid, mid).Delete(&models.Exclusion{})
+
+	// Delete the member
+	if err := h.DB.Delete(&member).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove member"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Member removed"})
+}
+
 func (h *Handler) JoinRaffle(c *gin.Context) {
 	userID := c.GetString("userID")
 	uid, _ := uuid.Parse(userID)

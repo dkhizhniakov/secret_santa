@@ -130,7 +130,12 @@
     "canEditProfile": "Puedes editar tu perfil hasta que se realice el sorteo.",
     "canEditProfileAfterDraw": "Puedes actualizar tu perfil (por ejemplo, aclarar la dirección) para tu Amigo Invisible.",
     "editProfile": "Editar Perfil",
-    "chatHint": "¡Ahora puedes chatear de forma anónima! Haz clic en el botón de chat en la esquina inferior derecha."
+    "chatHint": "¡Ahora puedes chatear de forma anónima! Haz clic en el botón de chat en la esquina inferior derecha.",
+    "removeMember": "Eliminar Participante",
+    "removeMemberTitle": "¿Eliminar Participante?",
+    "removeMemberText": "¿Estás seguro de que quieres eliminar a {{name}} del sorteo? Todas las exclusiones relacionadas con este participante serán eliminadas automáticamente.",
+    "removing": "Eliminando...",
+    "memberRemoved": "Participante eliminado con éxito"
   },
   "participantProfile": {
     "title": "Tu Perfil en el Sorteo",

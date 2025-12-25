@@ -127,6 +127,7 @@ func main() {
 			protected.POST("/raffles/:id/join", h.JoinRaffle)
 			protected.POST("/raffles/:id/draw", h.DrawNames)
 			protected.GET("/raffles/:id/my-assignment", h.GetMyAssignment)
+			protected.DELETE("/raffles/:id/members/:memberId", h.RemoveMember)
 
 			// Participant profile in raffle
 			protected.GET("/raffles/:id/my-profile", h.GetMyProfile)

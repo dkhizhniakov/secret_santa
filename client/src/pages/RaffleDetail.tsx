@@ -28,6 +28,7 @@ import {
   CalendarMonth,
   CheckCircle,
   Warning,
+  PersonRemove,
 } from "@mui/icons-material";
 import * as api from "../services/api";
 import { ParticipantProfileDialog } from "../components/ParticipantProfileDialog";
@@ -45,6 +46,11 @@ const RaffleDetail = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [chatHintOpen, setChatHintOpen] = useState(false);
+  const [removeMemberDialog, setRemoveMemberDialog] = useState<{
+    open: boolean;
+    memberId: string | null;
+    memberName: string;
+  }>({ open: false, memberId: null, memberName: "" });
 
   const { data: raffle, isLoading } = useQuery({
     queryKey: ["raffle", id],
@@ -94,6 +100,16 @@ const RaffleDetail = () => {
     },
   });
 
+  const removeMemberMutation = useMutation({
+    mutationFn: (memberId: string) => api.removeMember(id!, memberId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["raffle", id] });
+      queryClient.invalidateQueries({ queryKey: ["exclusions", id] });
+      showSnackbar(t("raffleDetail.memberRemoved"));
+      setRemoveMemberDialog({ open: false, memberId: null, memberName: "" });
+    },
+  });
+
   const showSnackbar = (message: string) => {
     setSnackbarMessage(message);
     setSnackbarOpen(true);
@@ -120,6 +136,16 @@ const RaffleDetail = () => {
     queryClient.invalidateQueries({ queryKey: ["raffle", id] });
     queryClient.invalidateQueries({ queryKey: ["raffleProfile", id] });
     showSnackbar(t("raffleDetail.profileUpdated"));
+  };
+
+  const handleRemoveMember = (memberId: string, memberName: string) => {
+    setRemoveMemberDialog({ open: true, memberId, memberName });
+  };
+
+  const confirmRemoveMember = () => {
+    if (removeMemberDialog.memberId) {
+      removeMemberMutation.mutate(removeMemberDialog.memberId);
+    }
   };
 
   const formatDate = (date: string | null) => {
@@ -169,6 +195,12 @@ const RaffleDetail = () => {
         <Alert severity="error" sx={{ mb: 3 }}>
           {(deleteMutation.error as any).response?.data?.error ||
             t("common.delete")}
+        </Alert>
+      )}
+      {removeMemberMutation.isError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {(removeMemberMutation.error as any).response?.data?.error ||
+            t("raffleDetail.removeMember")}
         </Alert>
       )}
 
@@ -656,6 +688,23 @@ const RaffleDetail = () => {
                     </Typography>
                   )}
                 </Box>
+                {raffle.isOwner &&
+                  !raffle.isDrawn &&
+                  member.userId !== raffle.ownerId && (
+                    <Tooltip title={t("raffleDetail.removeMember")} arrow>
+                      <Button
+                        size="small"
+                        color="error"
+                        onClick={() => handleRemoveMember(member.id, member.name)}
+                        sx={{
+                          minWidth: "auto",
+                          p: 0.5,
+                        }}
+                      >
+                        <PersonRemove fontSize="small" />
+                      </Button>
+                    </Tooltip>
+                  )}
               </Box>
             ))}
           </Box>
@@ -695,6 +744,44 @@ const RaffleDetail = () => {
             {deleteMutation.isPending
               ? t("raffleDetail.deleting")
               : t("common.delete")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Remove Member Dialog */}
+      <Dialog
+        open={removeMemberDialog.open}
+        onClose={() =>
+          setRemoveMemberDialog({ open: false, memberId: null, memberName: "" })
+        }
+      >
+        <DialogTitle>{t("raffleDetail.removeMemberTitle")}</DialogTitle>
+        <DialogContent>
+          {t("raffleDetail.removeMemberText", {
+            name: removeMemberDialog.memberName,
+          })}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() =>
+              setRemoveMemberDialog({
+                open: false,
+                memberId: null,
+                memberName: "",
+              })
+            }
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={confirmRemoveMember}
+            disabled={removeMemberMutation.isPending}
+          >
+            {removeMemberMutation.isPending
+              ? t("raffleDetail.removing")
+              : t("raffleDetail.removeMember")}
           </Button>
         </DialogActions>
       </Dialog>
